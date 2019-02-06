@@ -8,7 +8,7 @@ asmhead.bin: asmhead.asm Makefile
 	nasm asmhead.asm -o asmhead.bin -l asmhead.lst
 
 func.o: func.asm Makefile
-	nasm -f elf func.asm -o func.o -l func.lst
+	nasm -felf func.asm -o func.o -l func.lst
 
 makefont.out: makefont.c
 	gcc makefont.c -o makefont.out
