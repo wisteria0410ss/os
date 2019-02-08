@@ -170,7 +170,8 @@ ShtCtl *shtctl_init(MemMan *, unsigned char *, int, int);
 Sheet *sheet_alloc(ShtCtl *);
 void sheet_setbuf(Sheet *, unsigned char *, int, int, int);
 void sheet_updown(ShtCtl *, Sheet *, int);
-void sheet_refresh(ShtCtl *);
+void sheet_refresh(ShtCtl *, Sheet *, int, int, int, int);
+void sheet_refreshsub(ShtCtl *, int, int, int, int);
 void sheet_slide(ShtCtl *, Sheet *, int, int);
 void sheet_free(ShtCtl *, Sheet *);
 
