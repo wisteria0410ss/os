@@ -32,7 +32,7 @@ run: haribote.img
 	qemu-system-i386 -m 32 -fda haribote.img
 
 run-noframe: haribote.img
-	qemu-system-i386 -no-frame -fda haribote.img
+	qemu-system-i386 -m 32 -no-frame -fda haribote.img
 
 clean:
 	rm *.bin *.sys *.lst *.img *.hrb *.o *.out hankaku.c

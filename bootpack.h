@@ -134,6 +134,19 @@ void inthandler27(int *esp);
 #define PORT_KEYDAT		0x0060
 
 // bootpack.c
+#define MEMMAN_FREES	4090
+typedef struct{
+	unsigned int addr, size;
+} FreeInfo;
+typedef struct{
+	int frees, maxfrees, lostsize, losts;
+	FreeInfo free[MEMMAN_FREES];
+} MemMan;
+unsigned int memtest(unsigned int, unsigned int);
+void memman_init(MemMan *);
+unsigned int memman_total(MemMan *);
+unsigned int memman_alloc(MemMan *, unsigned int);
+int memman_free(MemMan *, unsigned int, unsigned int);
 #define EFLAGS_AC_BIT	0x00040000
 #define CR0_CACHE_DISABLE	0x60000000
-unsigned int memtest(unsigned int, unsigned int);
+#define MEMMAN_ADDR		0x003c0000
