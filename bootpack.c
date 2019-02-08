@@ -67,6 +67,7 @@ void os_main(void){
 				msprintf(s, "%02X", i);
 				boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
 				putfonts8_asc(buf_back, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+				sheet_refresh(shtctl);
 			}else if(fifo8_status(&mousefifo) != 0){
 				int i = fifo8_pop(&mousefifo);
 				io_sti();
