@@ -162,7 +162,7 @@ typedef struct{
 	struct ShtCtl *ctl;
 } Sheet;
 typedef struct ShtCtl{
-	unsigned char *vram;
+	unsigned char *vram, *map;
 	int xsize, ysize, top;
 	Sheet *sheets[MAX_SHEETS];
 	Sheet sheets0[MAX_SHEETS];
@@ -172,8 +172,9 @@ Sheet *sheet_alloc(ShtCtl *);
 void sheet_setbuf(Sheet *, unsigned char *, int, int, int);
 void sheet_updown(Sheet *, int);
 void sheet_refresh(Sheet *, int, int, int, int);
-void sheet_refreshsub(ShtCtl *, int, int, int, int);
+void sheet_refreshsub(ShtCtl *, int, int, int, int, int, int);
 void sheet_slide(Sheet *, int, int);
+void sheet_refreshmap(ShtCtl *, int, int, int, int, int);
 void sheet_free(Sheet *);
 
 // bootpack.c
