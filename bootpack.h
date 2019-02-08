@@ -133,7 +133,7 @@ void inthandler27(int *esp);
 #define PIC1_ICW4		0x00a1
 #define PORT_KEYDAT		0x0060
 
-// bootpack.c
+// memory.c
 #define MEMMAN_FREES	4090
 typedef struct{
 	unsigned int addr, size;
@@ -147,6 +147,10 @@ void memman_init(MemMan *);
 unsigned int memman_total(MemMan *);
 unsigned int memman_alloc(MemMan *, unsigned int);
 int memman_free(MemMan *, unsigned int, unsigned int);
+unsigned int memman_alloc_4k(MemMan *, unsigned int);
+int memman_free_4k(MemMan *, unsigned int, unsigned int);
 #define EFLAGS_AC_BIT	0x00040000
 #define CR0_CACHE_DISABLE	0x60000000
 #define MEMMAN_ADDR		0x003c0000
+
+// bootpack.c
