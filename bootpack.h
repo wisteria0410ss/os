@@ -159,8 +159,9 @@ int memman_free_4k(MemMan *, unsigned int, unsigned int);
 typedef struct{
 	unsigned char *buf;
 	int bxsize, bysize, vx0, vy0, col_transp, height, flags;
+	struct ShtCtl *ctl;
 } Sheet;
-typedef struct{
+typedef struct ShtCtl{
 	unsigned char *vram;
 	int xsize, ysize, top;
 	Sheet *sheets[MAX_SHEETS];
@@ -169,10 +170,10 @@ typedef struct{
 ShtCtl *shtctl_init(MemMan *, unsigned char *, int, int);
 Sheet *sheet_alloc(ShtCtl *);
 void sheet_setbuf(Sheet *, unsigned char *, int, int, int);
-void sheet_updown(ShtCtl *, Sheet *, int);
-void sheet_refresh(ShtCtl *, Sheet *, int, int, int, int);
+void sheet_updown(Sheet *, int);
+void sheet_refresh(Sheet *, int, int, int, int);
 void sheet_refreshsub(ShtCtl *, int, int, int, int);
-void sheet_slide(ShtCtl *, Sheet *, int, int);
-void sheet_free(ShtCtl *, Sheet *);
+void sheet_slide(Sheet *, int, int);
+void sheet_free(Sheet *);
 
 // bootpack.c
