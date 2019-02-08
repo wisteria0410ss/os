@@ -153,4 +153,25 @@ int memman_free_4k(MemMan *, unsigned int, unsigned int);
 #define CR0_CACHE_DISABLE	0x60000000
 #define MEMMAN_ADDR		0x003c0000
 
+// sheet.c
+#define MAX_SHEETS		256
+#define SHEET_USE		1
+typedef struct{
+	unsigned char *buf;
+	int bxsize, bysize, vx0, vy0, col_transp, height, flags;
+} Sheet;
+typedef struct{
+	unsigned char *vram;
+	int xsize, ysize, top;
+	Sheet *sheets[MAX_SHEETS];
+	Sheet sheets0[MAX_SHEETS];
+} ShtCtl;
+ShtCtl *shtctl_init(MemMan *, unsigned char *, int, int);
+Sheet *sheet_alloc(ShtCtl *);
+void sheet_setbuf(Sheet *, unsigned char *, int, int, int);
+void sheet_updown(ShtCtl *, Sheet *, int);
+void sheet_refresh(ShtCtl *);
+void sheet_slide(ShtCtl *, Sheet *, int, int);
+void sheet_free(ShtCtl *, Sheet *);
+
 // bootpack.c
