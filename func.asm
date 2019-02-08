@@ -5,6 +5,7 @@ section .text
     global io_load_eflags, io_store_eflags
     global load_gdtr, load_idtr
     global asm_inthandler21, asm_inthandler27, asm_inthandler2c
+    global load_cr0, store_cr0
     extern inthandler21, inthandler27, inthandler2c
 
 io_hlt:         ; void io_hlt()
@@ -80,6 +81,15 @@ load_idtr:     ; void load_idtr(int limit, int addr);
     mov     ax, [esp+4]     ; limit
     mov     [esp+6], ax
     lidt    [esp+6]
+    ret
+
+load_cr0:       ; int load_cr0(void);
+    mov     eax, cr0
+    ret
+
+store_cr0:      ; void store_cr0(int);
+    mov     eax, [esp+4]
+    mov     cr0, eax
     ret
 
 asm_inthandler21:

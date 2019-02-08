@@ -21,6 +21,8 @@ extern int io_load_eflags(void);
 extern void io_store_eflags(int);
 extern void load_gdtr(int, int);
 extern void load_idtr(int, int);
+extern int load_cr0(void);
+extern void store_cr0(int);
 extern void asm_inthandler21(void);
 extern void asm_inthandler27(void);
 extern void asm_inthandler2c(void);
@@ -131,3 +133,7 @@ void inthandler27(int *esp);
 #define PORT_KEYDAT		0x0060
 
 // bootpack.c
+#define EFLAGS_AC_BIT	0x00040000
+#define CR0_CACHE_DISABLE	0x60000000
+unsigned int memtest(unsigned int, unsigned int);
+unsigned int memtest_sub(unsigned int, unsigned int);
