@@ -177,3 +177,4 @@ void sheet_slide(Sheet *, int, int);
 void sheet_free(Sheet *);
 
 // bootpack.c
+void make_window8(unsigned char *, int, int, char *);
