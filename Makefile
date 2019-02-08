@@ -29,7 +29,7 @@ haribote.img: ipl.bin haribote.sys Makefile
 img: haribote.img
 
 run: haribote.img
-	qemu-system-i386 -fda haribote.img
+	qemu-system-i386 -m 32 -fda haribote.img
 
 run-noframe: haribote.img
 	qemu-system-i386 -no-frame -fda haribote.img

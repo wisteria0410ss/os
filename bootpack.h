@@ -26,6 +26,7 @@ extern void store_cr0(int);
 extern void asm_inthandler21(void);
 extern void asm_inthandler27(void);
 extern void asm_inthandler2c(void);
+extern unsigned int memtest_sub(unsigned int, unsigned int);
 
 // graphic.c
 void init_palette(void);
@@ -136,4 +137,3 @@ void inthandler27(int *esp);
 #define EFLAGS_AC_BIT	0x00040000
 #define CR0_CACHE_DISABLE	0x60000000
 unsigned int memtest(unsigned int, unsigned int);
-unsigned int memtest_sub(unsigned int, unsigned int);
