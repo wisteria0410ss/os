@@ -23,6 +23,7 @@ extern void load_gdtr(int, int);
 extern void load_idtr(int, int);
 extern int load_cr0(void);
 extern void store_cr0(int);
+extern void asm_inthandler20(void);
 extern void asm_inthandler21(void);
 extern void asm_inthandler27(void);
 extern void asm_inthandler2c(void);
@@ -176,6 +177,12 @@ void sheet_refreshsub(ShtCtl *, int, int, int, int, int, int);
 void sheet_slide(Sheet *, int, int);
 void sheet_refreshmap(ShtCtl *, int, int, int, int, int);
 void sheet_free(Sheet *);
+
+// timer.c
+#define PIT_CTRL		0x0043
+#define PIT_CNT0		0x0040
+void init_pit(void);
+void inthandler20(int *);
 
 // bootpack.c
 void make_window8(unsigned char *, int, int, char *);

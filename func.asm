@@ -4,10 +4,10 @@ section .text
     global io_out8, io_out16, io_out32
     global io_load_eflags, io_store_eflags
     global load_gdtr, load_idtr
-    global asm_inthandler21, asm_inthandler27, asm_inthandler2c
+    global asm_inthandler20, asm_inthandler21, asm_inthandler27, asm_inthandler2c
     global load_cr0, store_cr0
     global memtest_sub
-    extern inthandler21, inthandler27, inthandler2c
+    extern inthandler20, inthandler21, inthandler27, inthandler2c
 
 io_hlt:         ; void io_hlt()
     hlt
@@ -92,6 +92,22 @@ store_cr0:      ; void store_cr0(int);
     mov     eax, [esp+4]
     mov     cr0, eax
     ret
+
+asm_inthandler20:
+    push    es
+    push    ds
+	pushad
+    mov     eax, esp
+    push    eax
+    mov     ax, ss
+    mov     ds, ax
+    mov     es, ax
+    call    inthandler20
+    pop     eax
+    popad
+    pop     ds
+    pop     es
+    iretd
 
 asm_inthandler21:
     push    es
