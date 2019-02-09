@@ -179,18 +179,27 @@ void sheet_refreshmap(ShtCtl *, int, int, int, int, int);
 void sheet_free(Sheet *);
 
 // timer.c
-typedef struct{
-	unsigned int count;
-	unsigned int timeout;
-	FIFO8 *fifo;
-	unsigned char data;
-} TimerCtl;
-extern TimerCtl timerctl;
+#define MAX_TIMER		500
+#define TIMER_FLAGS_ALLOC	1
+#define TIMER_FLAGS_USING	2
 #define PIT_CTRL		0x0043
 #define PIT_CNT0		0x0040
+typedef struct{
+	unsigned int timeout, flags;
+	FIFO8 *fifo;
+	unsigned char data;
+} Timer;
+typedef struct{
+	unsigned int count;
+	Timer timer[MAX_TIMER];
+} TimerCtl;
+extern TimerCtl timerctl;
 void init_pit(void);
+Timer *timer_alloc(void);
+void timer_free(Timer *);
+void timer_init(Timer *, FIFO8 *, unsigned char);
+void timer_settime(Timer *, unsigned int);
 void inthandler20(int *);
-void settimer(unsigned int, FIFO8 *, unsigned char);
 
 // bootpack.c
 void make_window8(unsigned char *, int, int, char *);

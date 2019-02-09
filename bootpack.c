@@ -2,8 +2,9 @@
 
 void os_main(void){
 	BootInfo *binfo = (BootInfo *)ADR_BOOTINFO;
-	FIFO8 timerfifo;
-	char s[40], keybuf[32], mousebuf[128], timerbuf[8];
+	FIFO8 timerfifo[3];
+	char s[40], keybuf[32], mousebuf[128], timerbuf[3][8];
+	Timer *timer[3];
 	int mx, my;
 	unsigned int memtotal, count = 0;
 	MouseDec mdec;
@@ -19,8 +20,13 @@ void os_main(void){
 
 	fifo8_init(&keyfifo, 32, keybuf);
 	fifo8_init(&mousefifo, 128, mousebuf);
-	fifo8_init(&timerfifo, 8, timerbuf);
-	settimer(1000, &timerfifo, 1);
+	const int timeout[3] = {1000, 300, 50};
+	for(int i=0;i<3;i++){
+		fifo8_init(&timerfifo[i], 8, timerbuf[i]);
+		timer[i] = timer_alloc();
+		timer_init(timer[i], &timerfifo[i], 1);
+		timer_settime(timer[i], timeout[i]);
+	}
 
 	io_out8(PIC0_IMR, 0xf8);
 	io_out8(PIC1_IMR, 0xef);
@@ -74,7 +80,7 @@ void os_main(void){
 		sheet_refresh(sht_win, 40, 28, 120, 44);
 
 		io_cli();
-		if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0){
+		if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo[0]) + fifo8_status(&timerfifo[1]) + fifo8_status(&timerfifo[2]) == 0){
 			io_sti();
 		}else{
 			if(fifo8_status(&keyfifo) != 0){
@@ -109,11 +115,28 @@ void os_main(void){
 					sheet_refresh(sht_back, 0, 0, 80, 16);
 					sheet_slide(sht_mouse, mx, my);	// refreshを含む
 				}
-			}else if(fifo8_status(&timerfifo) != 0){
-				int i = fifo8_pop(&timerfifo);
+			}else if(fifo8_status(&timerfifo[0]) != 0){
+				int i = fifo8_pop(&timerfifo[0]);
 				io_sti();
 				putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10 sec.");
 				sheet_refresh(sht_back, 0, 64, 56, 80);
+			}else if(fifo8_status(&timerfifo[1]) != 0){
+				int i = fifo8_pop(&timerfifo[1]);
+				io_sti();
+				putfonts8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "3 sec.");
+				sheet_refresh(sht_back, 0, 80, 48, 96);
+			}else if(fifo8_status(&timerfifo[2]) != 0){
+				int i = fifo8_pop(&timerfifo[2]);
+				io_sti();
+				if(i != 0){
+					timer_init(timer[2], &timerfifo[2], 0);
+					boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+				}else{
+					timer_init(timer[2], &timerfifo[2], 1);
+					boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
+				}
+				timer_settime(timer[2], 50);
+				sheet_refresh(sht_back, 8, 96, 16, 112);
 			}
 		}
 	}
