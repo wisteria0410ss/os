@@ -2,7 +2,8 @@
 
 void os_main(void){
 	BootInfo *binfo = (BootInfo *)ADR_BOOTINFO;
-	char s[40], keybuf[32], mousebuf[128];;
+	FIFO8 timerfifo;
+	char s[40], keybuf[32], mousebuf[128], timerbuf[8];
 	int mx, my;
 	unsigned int memtotal, count = 0;
 	MouseDec mdec;
@@ -14,11 +15,13 @@ void os_main(void){
 	init_gdtidt();
 	init_pic();
 	io_sti();
+	init_pit();
 
 	fifo8_init(&keyfifo, 32, keybuf);
 	fifo8_init(&mousefifo, 128, mousebuf);
+	fifo8_init(&timerfifo, 8, timerbuf);
+	settimer(1000, &timerfifo, 1);
 
-	init_pit();
 	io_out8(PIC0_IMR, 0xf8);
 	io_out8(PIC1_IMR, 0xef);
 
@@ -71,7 +74,7 @@ void os_main(void){
 		sheet_refresh(sht_win, 40, 28, 120, 44);
 
 		io_cli();
-		if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0){
+		if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0){
 			io_sti();
 		}else{
 			if(fifo8_status(&keyfifo) != 0){
@@ -106,6 +109,11 @@ void os_main(void){
 					sheet_refresh(sht_back, 0, 0, 80, 16);
 					sheet_slide(sht_mouse, mx, my);	// refreshを含む
 				}
+			}else if(fifo8_status(&timerfifo) != 0){
+				int i = fifo8_pop(&timerfifo);
+				io_sti();
+				putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10 sec.");
+				sheet_refresh(sht_back, 0, 64, 56, 80);
 			}
 		}
 	}
