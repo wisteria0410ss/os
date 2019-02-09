@@ -34,7 +34,7 @@ void timer_init(Timer *timer, FIFO8 *fifo, unsigned char data){
 }
 
 void timer_settime(Timer *timer, unsigned int timeout){
-    timer->timeout = timeout;
+    timer->timeout = timeout + timerctl.count;
     timer->flags = TIMER_FLAGS_USING;
     return;
 }
@@ -44,8 +44,7 @@ void inthandler20(int *esp){
     timerctl.count++;
     for(int i=0;i<MAX_TIMER;i++){
         if(timerctl.timer[i].flags == TIMER_FLAGS_USING){
-            timerctl.timer[i].timeout--;
-            if(timerctl.timer[i].timeout == 0){
+            if(timerctl.timer[i].timeout <= timerctl.count){
                 timerctl.timer[i].flags == TIMER_FLAGS_ALLOC;
                 fifo8_push(timerctl.timer[i].fifo, timerctl.timer[i].data);
             }
