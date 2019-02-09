@@ -64,20 +64,18 @@ void os_main(void){
 	sheet_updown(sht_mouse, 2);
 
 	msprintf(s, "(%3d, %3d)", mx, my);
-	putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
-	msprintf(s, "memory %d MiB,   free: %d kiB", memtotal / (1024*1024), memman_total(memman) / 1024);
-	putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
+	putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
+	int s_len = 0;
+	msprintf(s, "memory %d MiB,   free: %d kiB%n", memtotal / (1024*1024), memman_total(memman) / 1024, &s_len);
+	putfonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, s_len);
 	putfonts8_asc(buf_back, binfo->scrnx, binfo->scrnx-8*12, binfo->scrny-46, COL8_000000, "Haribote OS.");
 	putfonts8_asc(buf_back, binfo->scrnx, binfo->scrnx-8*12-1, binfo->scrny-47, COL8_FFFFFF, "Haribote OS.");
-	sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 	sheet_refresh(sht_back, binfo->scrnx-8*12-1, binfo->scrny-47, binfo->scrnx, binfo->scrny);
 
 	while(1){
 		count++;
 		msprintf(s, "%010d", timerctl.count);
-		boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 119, 43);
-		putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
-		sheet_refresh(sht_win, 40, 28, 120, 44);
+		putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
 
 		io_cli();
 		if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo[0]) + fifo8_status(&timerfifo[1]) + fifo8_status(&timerfifo[2]) == 0){
@@ -87,9 +85,7 @@ void os_main(void){
 				int i = fifo8_pop(&keyfifo);
 				io_sti();
 				msprintf(s, "%02X", i);
-				boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
-				putfonts8_asc(buf_back, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
-				sheet_refresh(sht_back, 0, 16, 16, 32);
+				putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
 			}else if(fifo8_status(&mousefifo) != 0){
 				int i = fifo8_pop(&mousefifo);
 				io_sti();
@@ -98,10 +94,7 @@ void os_main(void){
 					if(mdec.btn & 0x01) s[1] = 'L';
 					if(mdec.btn & 0x02) s[3] = 'R';
 					if(mdec.btn & 0x04) s[2] = 'C';
-
-					boxfill8(buf_back, binfo->scrnx, COL8_008484, 32, 16, 32 + 8*15-1, 31);
-					putfonts8_asc(buf_back, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
-					sheet_refresh(sht_back, 32, 16, 32+15*8, 32);
+					putfonts8_asc_sht(sht_back, 32, 16, COL8_FFFFFF, COL8_008484, s, 15);
 
 					mx += mdec.x;
 					my += mdec.y;
@@ -110,21 +103,17 @@ void os_main(void){
 					if(mx > binfo->scrnx-1) mx = binfo->scrnx - 1;
 					if(my > binfo->scrny-1) my = binfo->scrny - 1;
 					msprintf(s, "(%3d, %3d)", mx, my);
-					boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 0, 79, 15);
-					putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
-					sheet_refresh(sht_back, 0, 0, 80, 16);
+					putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
 					sheet_slide(sht_mouse, mx, my);	// refreshを含む
 				}
 			}else if(fifo8_status(&timerfifo[0]) != 0){
 				int i = fifo8_pop(&timerfifo[0]);
 				io_sti();
-				putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10 sec.");
-				sheet_refresh(sht_back, 0, 64, 56, 80);
+				putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec.", 7);
 			}else if(fifo8_status(&timerfifo[1]) != 0){
 				int i = fifo8_pop(&timerfifo[1]);
 				io_sti();
-				putfonts8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "3 sec.");
-				sheet_refresh(sht_back, 0, 80, 48, 96);
+				putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3 sec.", 6);
 			}else if(fifo8_status(&timerfifo[2]) != 0){
 				int i = fifo8_pop(&timerfifo[2]);
 				io_sti();

@@ -29,6 +29,50 @@ extern void asm_inthandler27(void);
 extern void asm_inthandler2c(void);
 extern unsigned int memtest_sub(unsigned int, unsigned int);
 
+// memory.c
+#define MEMMAN_FREES	4090
+typedef struct{
+	unsigned int addr, size;
+} FreeInfo;
+typedef struct{
+	int frees, maxfrees, lostsize, losts;
+	FreeInfo free[MEMMAN_FREES];
+} MemMan;
+unsigned int memtest(unsigned int, unsigned int);
+void memman_init(MemMan *);
+unsigned int memman_total(MemMan *);
+unsigned int memman_alloc(MemMan *, unsigned int);
+int memman_free(MemMan *, unsigned int, unsigned int);
+unsigned int memman_alloc_4k(MemMan *, unsigned int);
+int memman_free_4k(MemMan *, unsigned int, unsigned int);
+#define EFLAGS_AC_BIT	0x00040000
+#define CR0_CACHE_DISABLE	0x60000000
+#define MEMMAN_ADDR		0x003c0000
+
+// sheet.c
+#define MAX_SHEETS		256
+#define SHEET_USE		1
+typedef struct{
+	unsigned char *buf;
+	int bxsize, bysize, vx0, vy0, col_transp, height, flags;
+	struct ShtCtl *ctl;
+} Sheet;
+typedef struct ShtCtl{
+	unsigned char *vram, *map;
+	int xsize, ysize, top;
+	Sheet *sheets[MAX_SHEETS];
+	Sheet sheets0[MAX_SHEETS];
+} ShtCtl;
+ShtCtl *shtctl_init(MemMan *, unsigned char *, int, int);
+Sheet *sheet_alloc(ShtCtl *);
+void sheet_setbuf(Sheet *, unsigned char *, int, int, int);
+void sheet_updown(Sheet *, int);
+void sheet_refresh(Sheet *, int, int, int, int);
+void sheet_refreshsub(ShtCtl *, int, int, int, int, int, int);
+void sheet_slide(Sheet *, int, int);
+void sheet_refreshmap(ShtCtl *, int, int, int, int, int);
+void sheet_free(Sheet *);
+
 // graphic.c
 void init_palette(void);
 void set_palette(int, int, unsigned char*);
@@ -38,6 +82,7 @@ void put_block8(char*, int, int, int, int, int, char*, int);
 void boxfill8(char*, int, unsigned char, int, int, int, int);
 void putfont8(char*, int, int, int, unsigned char, char*);
 void putfonts8_asc(char*, int, int, int, unsigned char, unsigned char*);
+void putfonts8_asc_sht(Sheet *, int, int, int, int, char *, int);
 #define COL8_000000		0
 #define COL8_FF0000		1
 #define COL8_00FF00		2
@@ -133,50 +178,6 @@ void inthandler27(int *esp);
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
 #define PORT_KEYDAT		0x0060
-
-// memory.c
-#define MEMMAN_FREES	4090
-typedef struct{
-	unsigned int addr, size;
-} FreeInfo;
-typedef struct{
-	int frees, maxfrees, lostsize, losts;
-	FreeInfo free[MEMMAN_FREES];
-} MemMan;
-unsigned int memtest(unsigned int, unsigned int);
-void memman_init(MemMan *);
-unsigned int memman_total(MemMan *);
-unsigned int memman_alloc(MemMan *, unsigned int);
-int memman_free(MemMan *, unsigned int, unsigned int);
-unsigned int memman_alloc_4k(MemMan *, unsigned int);
-int memman_free_4k(MemMan *, unsigned int, unsigned int);
-#define EFLAGS_AC_BIT	0x00040000
-#define CR0_CACHE_DISABLE	0x60000000
-#define MEMMAN_ADDR		0x003c0000
-
-// sheet.c
-#define MAX_SHEETS		256
-#define SHEET_USE		1
-typedef struct{
-	unsigned char *buf;
-	int bxsize, bysize, vx0, vy0, col_transp, height, flags;
-	struct ShtCtl *ctl;
-} Sheet;
-typedef struct ShtCtl{
-	unsigned char *vram, *map;
-	int xsize, ysize, top;
-	Sheet *sheets[MAX_SHEETS];
-	Sheet sheets0[MAX_SHEETS];
-} ShtCtl;
-ShtCtl *shtctl_init(MemMan *, unsigned char *, int, int);
-Sheet *sheet_alloc(ShtCtl *);
-void sheet_setbuf(Sheet *, unsigned char *, int, int, int);
-void sheet_updown(Sheet *, int);
-void sheet_refresh(Sheet *, int, int, int, int);
-void sheet_refreshsub(ShtCtl *, int, int, int, int, int, int);
-void sheet_slide(Sheet *, int, int);
-void sheet_refreshmap(ShtCtl *, int, int, int, int, int);
-void sheet_free(Sheet *);
 
 // timer.c
 #define MAX_TIMER		500

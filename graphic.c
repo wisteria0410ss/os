@@ -130,3 +130,11 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, unsigned char c, unsigne
 	}
 	return;
 }
+
+void putfonts8_asc_sht(Sheet *sht, int x, int y, int col, int bgcol, char *str, int len){
+	boxfill8(sht->buf, sht->bxsize, bgcol, x, y, x + len*8 - 1, y + 15);
+	putfonts8_asc(sht->buf, sht->bxsize, x, y, col, str);
+	sheet_refresh(sht, x, y, x + len*8, y+16);
+
+	return;
+}
