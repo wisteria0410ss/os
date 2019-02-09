@@ -190,8 +190,9 @@ typedef struct{
 	unsigned char data;
 } Timer;
 typedef struct{
-	unsigned int count, next;
-	Timer timer[MAX_TIMER];
+	unsigned int count, next, num_using;
+	Timer *timers[MAX_TIMER];
+	Timer timers0[MAX_TIMER];
 } TimerCtl;
 extern TimerCtl timerctl;
 void init_pit(void);
