@@ -2,8 +2,8 @@
 
 void os_main(void){
 	BootInfo *binfo = (BootInfo *)ADR_BOOTINFO;
-	FIFO8 timerfifo[3];
-	char s[40], keybuf[32], mousebuf[128], timerbuf[3][8];
+	FIFO8 timerfifo;
+	char s[40], keybuf[32], mousebuf[128], timerbuf[8];
 	Timer *timer[3];
 	int mx, my;
 	unsigned int memtotal, count = 0;
@@ -20,11 +20,11 @@ void os_main(void){
 
 	fifo8_init(&keyfifo, 32, keybuf);
 	fifo8_init(&mousefifo, 128, mousebuf);
-	const int timeout[3] = {1000, 300, 50};
+	const int timeout[3] = {1000, 300, 50}, timer_data[3] = {10, 3, 1};
+	fifo8_init(&timerfifo, 8, timerbuf);
 	for(int i=0;i<3;i++){
-		fifo8_init(&timerfifo[i], 8, timerbuf[i]);
 		timer[i] = timer_alloc();
-		timer_init(timer[i], &timerfifo[i], 1);
+		timer_init(timer[i], &timerfifo, timer_data[i]);
 		timer_settime(timer[i], timeout[i]);
 	}
 
@@ -78,7 +78,7 @@ void os_main(void){
 		putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
 
 		io_cli();
-		if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo[0]) + fifo8_status(&timerfifo[1]) + fifo8_status(&timerfifo[2]) == 0){
+		if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0){
 			io_sti();
 		}else{
 			if(fifo8_status(&keyfifo) != 0){
@@ -106,26 +106,28 @@ void os_main(void){
 					putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
 					sheet_slide(sht_mouse, mx, my);	// refreshを含む
 				}
-			}else if(fifo8_status(&timerfifo[0]) != 0){
-				int i = fifo8_pop(&timerfifo[0]);
+			}else if(fifo8_status(&timerfifo) != 0){
+				int i = fifo8_pop(&timerfifo);
 				io_sti();
-				putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec.", 7);
-			}else if(fifo8_status(&timerfifo[1]) != 0){
-				int i = fifo8_pop(&timerfifo[1]);
-				io_sti();
-				putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3 sec.", 6);
-			}else if(fifo8_status(&timerfifo[2]) != 0){
-				int i = fifo8_pop(&timerfifo[2]);
-				io_sti();
-				if(i != 0){
-					timer_init(timer[2], &timerfifo[2], 0);
-					boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
-				}else{
-					timer_init(timer[2], &timerfifo[2], 1);
-					boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
+				switch(i){
+				case 10:
+					putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec.", 7);
+					break;
+				case 3:
+					putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3 sec.", 6);
+					break;
+				default:
+					if(i != 0){
+						timer_init(timer[2], &timerfifo, 0);
+						boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+					}else{
+						timer_init(timer[2], &timerfifo, 1);
+						boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
+					}
+					timer_settime(timer[2], 50);
+					sheet_refresh(sht_back, 8, 96, 16, 112);
+					break;
 				}
-				timer_settime(timer[2], 50);
-				sheet_refresh(sht_back, 8, 96, 16, 112);
 			}
 		}
 	}
