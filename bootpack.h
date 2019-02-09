@@ -179,6 +179,10 @@ void sheet_refreshmap(ShtCtl *, int, int, int, int, int);
 void sheet_free(Sheet *);
 
 // timer.c
+typedef struct{
+	unsigned int count;
+} TimerCtl;
+extern TimerCtl timerctl;
 #define PIT_CTRL		0x0043
 #define PIT_CNT0		0x0040
 void init_pit(void);
