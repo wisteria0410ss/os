@@ -8,9 +8,34 @@ vmode   equ 0x0ff2          ; 色数
 scrnx   equ 0x0ff4          ; X解像度
 scrny   equ 0x0ff6          ; Y解像度
 vram    equ 0x0ff8          ; グラフィックバッファの開始番地
+info    equ 0x1000          ; 画面モード情報の格納先
+gmode   equ 0x105           ; 画面モード
 
     org     0xc200
 
+    mov     ax, 0x0000      ; 画面モード情報取得
+    mov     es, ax          ; es:di ...受け取る番地
+    mov     ax, info
+    mov     di, ax
+    mov     ax, 0x4f01      ; ax    ...0x4f01で情報取得
+    mov     cx, gmode       ; cx    ...画面モード
+    int     0x10            ; ビデオBIOS呼出
+    cmp     ax, 0x004f      ; 呼出成功かつVESAサポートありか
+    jne     low_res         ; だめなら低解像度
+
+    mov     bx, 0x4000+gmode; gmodeで指定したモード
+    mov     ax, 0x4f02      ; 画面モード切替
+    int     0x10            ; ビデオBIOS呼出
+    mov     al, [info+0x19] ; 色情報    ...オフセット0x19, byte
+    mov     byte [vmode], al
+    mov     ax, [info+0x12] ; X解像度   ...オフセット0x12, word
+    mov     word [scrnx], ax
+    mov     ax, [info+0x14] ; Y解像度   ...オフセット0x14, word
+    mov     word [scrny], ax
+    mov     dword eax, [info+0x28] ; vramベース...オフセット0x28, dword
+    mov     dword [vram], eax
+    jmp     get_led
+low_res:
     mov     al, 0x13        ; VGAグラフィックス、320x200x8bit color
     mov     ah, 0x00        ; 画面モード切替
     int     0x10            ; ビデオBIOS呼出
@@ -18,7 +43,7 @@ vram    equ 0x0ff8          ; グラフィックバッファの開始番地
     mov     word [scrnx], 320
     mov     word [scrny], 200
     mov     dword [vram], 0x000a0000
-
+get_led:
     mov     ah, 0x02
     int     0x16            ; キーボードBIOS呼出
     mov     [leds], al

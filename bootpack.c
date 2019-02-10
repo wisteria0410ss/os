@@ -32,7 +32,6 @@ void os_main(void){
 		timer_init(timer[i], &fifo, timer_data[i]);
 		timer_settime(timer[i], timeout[i]);
 	}
-	set490(&fifo, 0);
 	
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
@@ -77,7 +76,7 @@ void os_main(void){
 
 		io_cli();
 		if(fifo32_status(&fifo) == 0){
-			io_sti();
+			io_stihlt();
 		}else{
 			int i = fifo32_pop(&fifo);
 			io_sti();
