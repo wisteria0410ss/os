@@ -1,6 +1,7 @@
 #include "bootpack.h"
 
-FIFO8 keyfifo;
+FIFO32 *keyfifo;
+int keydata0;
 
 void wait_KBC_sendready(){
 	while(1){
@@ -9,7 +10,9 @@ void wait_KBC_sendready(){
 	return;
 }
 
-void init_keyboard(){
+void init_keyboard(FIFO32 *fifo, int data0){
+	keyfifo = fifo;
+	keydata0 = data0;
 	wait_KBC_sendready();
 	io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
 	wait_KBC_sendready();
@@ -19,10 +22,10 @@ void init_keyboard(){
 }
 
 void inthandler21(int *esp){ // PS/2キーボードからの割り込み
-	unsigned char data;
+	int data;
     io_out8(PIC0_OCW2, 0x61);   // IRQ-01受付完了をPICに通知
     data = io_in8(PORT_KEYDAT);
-    fifo8_push(&keyfifo, data);
+    fifo32_push(keyfifo, data + keydata0);
     
 	return;
 }

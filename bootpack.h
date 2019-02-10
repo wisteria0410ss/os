@@ -133,17 +133,24 @@ typedef struct{
 	unsigned char *buf;
 	int p, q, size, free, flags;
 } FIFO8;
+typedef struct{
+	int *buf;
+	int p, q, size, free, flags;
+} FIFO32;
 void fifo8_init(FIFO8 *, int, unsigned char *);
 int fifo8_push(FIFO8 *, unsigned char);
 int fifo8_pop(FIFO8 *);
 int fifo8_status(FIFO8 *);
+void fifo32_init(FIFO32 *, int, int *);
+int fifo32_push(FIFO32 *, int);
+int fifo32_pop(FIFO32 *);
+int fifo32_status(FIFO32 *);
 #define FLAGS_OVERRUN	0x0001
 
 // keyboard.c
 void inthandler21(int *esp);
 void wait_KBC_sendready(void);
-void init_keyboard(void);
-extern FIFO8 keyfifo;
+void init_keyboard(FIFO32 *, int);
 #define PORT_KEYSTA		0x0064
 #define PORT_KEYCMD		0x0064
 #define KEYSTA_SEND_NOTREADY	0x02
@@ -156,9 +163,8 @@ typedef struct{
 	int x, y, btn;
 } MouseDec;
 void inthandler2c(int *esp);
-void enable_mouse(MouseDec *);
+void enable_mouse(FIFO32 *, int, MouseDec *);
 int mouse_decode(MouseDec *, unsigned char);
-extern FIFO8 mousefifo;
 #define KEYCMD_SENDTO_MOUSE		0xd4
 #define MOUSECMD_ENABLE	0xf4
 
@@ -187,8 +193,8 @@ void inthandler27(int *esp);
 #define PIT_CNT0		0x0040
 typedef struct{
 	unsigned int timeout, flags;
-	FIFO8 *fifo;
-	unsigned char data;
+	FIFO32 *fifo;
+	int data;
 } Timer;
 typedef struct{
 	unsigned int count, next, num_using;
@@ -199,7 +205,7 @@ extern TimerCtl timerctl;
 void init_pit(void);
 Timer *timer_alloc(void);
 void timer_free(Timer *);
-void timer_init(Timer *, FIFO8 *, unsigned char);
+void timer_init(Timer *, FIFO32 *, int);
 void timer_settime(Timer *, unsigned int);
 void inthandler20(int *);
 

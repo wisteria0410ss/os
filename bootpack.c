@@ -2,8 +2,9 @@
 
 void os_main(void){
 	BootInfo *binfo = (BootInfo *)ADR_BOOTINFO;
-	FIFO8 timerfifo;
-	char s[40], keybuf[32], mousebuf[128], timerbuf[8];
+	FIFO32 fifo;
+	char s[40];
+	int fifobuf[128];
 	Timer *timer[3];
 	int mx, my;
 	unsigned int memtotal, count = 0;
@@ -16,23 +17,21 @@ void os_main(void){
 	init_gdtidt();
 	init_pic();
 	io_sti();
-	fifo8_init(&keyfifo, 32, keybuf);
-	fifo8_init(&mousefifo, 128, mousebuf);
+
+	fifo32_init(&fifo, 128, fifobuf);
+	init_keyboard(&fifo, 256);
+	enable_mouse(&fifo, 512, &mdec);
 
 	init_pit();
 	io_out8(PIC0_IMR, 0xf8);
 	io_out8(PIC1_IMR, 0xef);
 
 	const int timeout[3] = {1000, 300, 50}, timer_data[3] = {10, 3, 1};
-	fifo8_init(&timerfifo, 8, timerbuf);
 	for(int i=0;i<3;i++){
 		timer[i] = timer_alloc();
-		timer_init(timer[i], &timerfifo, timer_data[i]);
+		timer_init(timer[i], &fifo, timer_data[i]);
 		timer_settime(timer[i], timeout[i]);
 	}
-
-	init_keyboard();
-	enable_mouse(&mdec);
 	
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
@@ -76,18 +75,16 @@ void os_main(void){
 		count++;
 
 		io_cli();
-		if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0){
+		if(fifo32_status(&fifo) == 0){
 			io_sti();
 		}else{
-			if(fifo8_status(&keyfifo) != 0){
-				int i = fifo8_pop(&keyfifo);
-				io_sti();
-				msprintf(s, "%02X", i);
+			int i = fifo32_pop(&fifo);
+			io_sti();
+			if(256 <= i && i < 512){
+				msprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
-			}else if(fifo8_status(&mousefifo) != 0){
-				int i = fifo8_pop(&mousefifo);
-				io_sti();
-				if(mouse_decode(&mdec, i) != 0){
+			}else if(512 <= i && i < 768){
+				if(mouse_decode(&mdec, i - 512) != 0){
 					msprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
 					if(mdec.btn & 0x01) s[1] = 'L';
 					if(mdec.btn & 0x02) s[3] = 'R';
@@ -104,9 +101,7 @@ void os_main(void){
 					putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
 					sheet_slide(sht_mouse, mx, my);	// refreshを含む
 				}
-			}else if(fifo8_status(&timerfifo) != 0){
-				int i = fifo8_pop(&timerfifo);
-				io_sti();
+			}else{
 				switch(i){
 				case 10:
 					putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec.", 7);
@@ -117,14 +112,15 @@ void os_main(void){
 					putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3 sec.", 6);
 					count = 0;
 					break;
-				default:
-					if(i != 0){
-						timer_init(timer[2], &timerfifo, 0);
-						boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
-					}else{
-						timer_init(timer[2], &timerfifo, 1);
-						boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
-					}
+				case 1:
+					timer_init(timer[2], &fifo, 0);
+					boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+					timer_settime(timer[2], 50);
+					sheet_refresh(sht_back, 8, 96, 16, 112);
+					break;
+				case 0:
+					timer_init(timer[2], &fifo, 1);
+					boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
 					timer_settime(timer[2], 50);
 					sheet_refresh(sht_back, 8, 96, 16, 112);
 					break;

@@ -29,7 +29,7 @@ void timer_free(Timer *timer){
     return;
 }
 
-void timer_init(Timer *timer, FIFO8 *fifo, unsigned char data){
+void timer_init(Timer *timer, FIFO32 *fifo, int data){
     timer->fifo = fifo;
     timer->data = data;
     return;
@@ -64,7 +64,7 @@ void inthandler20(int *esp){
     for(i=0;i<timerctl.num_using;i++){
         if(timerctl.timers[i]->timeout > timerctl.count) break;
         timerctl.timers[i]->flags = TIMER_FLAGS_ALLOC;
-        fifo8_push(timerctl.timers[i]->fifo, timerctl.timers[i]->data);
+        fifo32_push(timerctl.timers[i]->fifo, timerctl.timers[i]->data);
     }
 
     timerctl.num_using -= i;
