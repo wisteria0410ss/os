@@ -36,41 +36,70 @@ void timer_init(Timer *timer, FIFO32 *fifo, int data){
 }
 
 void timer_settime(Timer *timer, unsigned int timeout){
-    int e, i, j;
+    int e;
+    Timer *t, *prev;
     timer->timeout = timeout + timerctl.count;
     timer->flags = TIMER_FLAGS_USING;
 
     e = io_load_eflags();
     io_cli();
-
-    for(i=0;i<timerctl.num_using;i++){
-        if(timerctl.timers[i]->timeout >= timer->timeout) break;
-    }
-    for(j = timerctl.num_using;j>i;j--) timerctl.timers[j] = timerctl.timers[j-1];
     timerctl.num_using++;
     
-    timerctl.timers[i] = timer;
-    timerctl.next = timerctl.timers[0]->timeout;
+    if(timerctl.num_using == 1){        // 動作中のものが1つのみになる場合
+        timerctl.t0 = timer;
+        timer->next_timer = 0;
+        timerctl.next = timer->timeout;
+        io_store_eflags(e);
+
+        return;
+    }
+    t = timerctl.t0;
+    if(timer->timeout <= t->timeout){   // 先頭に入れる場合
+        timerctl.t0 = timer;
+        timer->next_timer = t;
+        timerctl.next = timer->timeout;
+        io_store_eflags(e);
+
+        return;
+    }
+    while(1){
+        prev = t;
+        t = t->next_timer;
+        if(t == 0) break;   // 末尾に到達
+        if(timer->timeout <= t->timeout){   // prev と t の間に挿入
+            prev->next_timer = timer;
+            timer->next_timer = t;
+            io_store_eflags(e);
+
+            return;
+        }
+    }
+    // 末尾に挿入
+    prev->next_timer = timer;
+    timer->next_timer = 0;
     io_store_eflags(e);
-    
+
     return;
 }
 
 void inthandler20(int *esp){
-    int i, j;
+    int i;
+    Timer *timer;
     io_out8(PIC0_OCW2, 0x60);       // IRQ-00受付完了をPICに通知
     timerctl.count++;
     if(timerctl.count < timerctl.next) return;
+    timer = timerctl.t0;
     for(i=0;i<timerctl.num_using;i++){
-        if(timerctl.timers[i]->timeout > timerctl.count) break;
-        timerctl.timers[i]->flags = TIMER_FLAGS_ALLOC;
-        fifo32_push(timerctl.timers[i]->fifo, timerctl.timers[i]->data);
+        if(timer->timeout > timerctl.count) break;
+        timer->flags = TIMER_FLAGS_ALLOC;
+        fifo32_push(timer->fifo, timer->data);
+        timer = timer->next_timer;
     }
 
     timerctl.num_using -= i;
-    for(j=0;j<timerctl.num_using;j++) timerctl.timers[j] = timerctl.timers[i+j];
+    timerctl.t0 = timer;
 
-    if(timerctl.num_using > 0) timerctl.next = timerctl.timers[0]->timeout;
+    if(timerctl.num_using > 0) timerctl.next = timerctl.t0->timeout;
     else timerctl.next = 0xffffffff;
 
     return;

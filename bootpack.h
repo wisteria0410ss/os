@@ -191,14 +191,15 @@ void inthandler27(int *esp);
 #define TIMER_FLAGS_USING	2
 #define PIT_CTRL		0x0043
 #define PIT_CNT0		0x0040
-typedef struct{
+typedef struct Timer{
+	struct Timer *next_timer;
 	unsigned int timeout, flags;
 	FIFO32 *fifo;
 	int data;
 } Timer;
 typedef struct{
 	unsigned int count, next, num_using;
-	Timer *timers[MAX_TIMER];
+	Timer *t0;
 	Timer timers0[MAX_TIMER];
 } TimerCtl;
 extern TimerCtl timerctl;
