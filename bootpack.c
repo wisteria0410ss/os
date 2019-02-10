@@ -62,8 +62,8 @@ void os_main(void){
 	sheet_updown(sht_win, 1);
 	sheet_updown(sht_mouse, 2);
 
-	msprintf(s, "(%3d, %3d)", mx, my);
-	putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
+	msprintf(s, "(%4d, %4d)", mx, my);
+	putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 12);
 	int s_len = 0;
 	msprintf(s, "memory %d MiB,   free: %d kiB%n", memtotal / (1024*1024), memman_total(memman) / 1024, &s_len);
 	putfonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, s_len);
@@ -97,8 +97,8 @@ void os_main(void){
 					if(my < 0) my = 0;
 					if(mx > binfo->scrnx-1) mx = binfo->scrnx - 1;
 					if(my > binfo->scrny-1) my = binfo->scrny - 1;
-					msprintf(s, "(%3d, %3d)", mx, my);
-					putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
+					msprintf(s, "(%4d, %4d)", mx, my);
+					putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 12);
 					sheet_slide(sht_mouse, mx, my);	// refreshを含む
 				}
 			}else{

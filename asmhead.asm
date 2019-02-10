@@ -8,34 +8,49 @@ vmode   equ 0x0ff2          ; 色数
 scrnx   equ 0x0ff4          ; X解像度
 scrny   equ 0x0ff6          ; Y解像度
 vram    equ 0x0ff8          ; グラフィックバッファの開始番地
-info    equ 0x1000          ; 画面モード情報の格納先
-gmode   equ 0x105           ; 画面モード
+vbemode equ 0x107           ; 画面モード
 
     org     0xc200
 
-    mov     ax, 0x0000      ; 画面モード情報取得
+    mov     ax, 0x9000      ; VBE存在確認
     mov     es, ax          ; es:di ...受け取る番地
-    mov     ax, info
-    mov     di, ax
-    mov     ax, 0x4f01      ; ax    ...0x4f01で情報取得
-    mov     cx, gmode       ; cx    ...画面モード
+    mov     di, 0
+    mov     ax, 0x4f00      ; ax    ...0x4f00でVESAインフォメーション取得
     int     0x10            ; ビデオBIOS呼出
     cmp     ax, 0x004f      ; 呼出成功かつVESAサポートありか
-    jne     low_res         ; だめなら低解像度
+    jne     scrn320         ; だめなら低解像度
+    mov     ax, [es:di + 4]
+    cmp     ax, 0x0200      ; VBEバージョンが2以上か
+    jb      scrn320         ; だめなら低解像度
 
-    mov     bx, 0x4000+gmode; gmodeで指定したモード
+                            ; 画面モード情報取得
+                            ; es:di ...受け取る番地(そのまま)
+    mov     ax, 0x4f01      ; ax    ...0x4f01で画面モード情報取得
+    mov     cx, vbemode     ; cx    ...画面モード
+    int     0x10            ; ビデオBIOS呼出
+    cmp     ax, 0x004f      ; 呼出成功かつVESAサポートありか
+    jne     scrn320         ; だめなら低解像度
+
+    cmp     byte [es:di+0x19], 8    ; 色数が8か
+    jne     scrn320
+    cmp     byte [es:di+0x1b], 4    ; パレットモードか
+    jne     scrn320
+    mov     ax, [es:di+0x00]
+    and     ax, 0x0080
+    jz      scrn320
+
+    mov     bx, vbemode+0x4000
     mov     ax, 0x4f02      ; 画面モード切替
     int     0x10            ; ビデオBIOS呼出
-    mov     al, [info+0x19] ; 色情報    ...オフセット0x19, byte
-    mov     byte [vmode], al
-    mov     ax, [info+0x12] ; X解像度   ...オフセット0x12, word
+    mov     byte [vmode], 8 ; 色情報, 8であることは保証されている
+    mov     ax, [es:di+0x12]    ; X解像度   ...オフセット0x12, word
     mov     word [scrnx], ax
-    mov     ax, [info+0x14] ; Y解像度   ...オフセット0x14, word
+    mov     ax, [es:di+0x14]    ; Y解像度   ...オフセット0x14, word
     mov     word [scrny], ax
-    mov     dword eax, [info+0x28] ; vramベース...オフセット0x28, dword
+    mov     dword eax, [es:di+0x28] ; vramベース...オフセット0x28, dword
     mov     dword [vram], eax
-    jmp     get_led
-low_res:
+    jmp     key_status
+scrn320:
     mov     al, 0x13        ; VGAグラフィックス、320x200x8bit color
     mov     ah, 0x00        ; 画面モード切替
     int     0x10            ; ビデオBIOS呼出
@@ -43,7 +58,7 @@ low_res:
     mov     word [scrnx], 320
     mov     word [scrny], 200
     mov     dword [vram], 0x000a0000
-get_led:
+key_status:
     mov     ah, 0x02
     int     0x16            ; キーボードBIOS呼出
     mov     [leds], al
