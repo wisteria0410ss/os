@@ -212,3 +212,4 @@ void inthandler20(int *);
 
 // bootpack.c
 void make_window8(unsigned char *, int, int, char *);
+void set490(FIFO32 *, int);

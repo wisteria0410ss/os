@@ -32,6 +32,7 @@ void os_main(void){
 		timer_init(timer[i], &fifo, timer_data[i]);
 		timer_settime(timer[i], timeout[i]);
 	}
+	set490(&fifo, 0);
 	
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
@@ -180,5 +181,18 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title){
 		}
 	}
 
+	return;
+}
+
+void set490(FIFO32 *fifo, int mode){
+	int i;
+	Timer *timer;
+	if(mode != 0){
+		for(i=0;i<490;i++){
+			timer = timer_alloc();
+			timer_init(timer, fifo, 1024+i);
+			timer_settime(timer, 100*60*60*24*50 + i*100);
+		}
+	}
 	return;
 }

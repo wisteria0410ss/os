@@ -32,7 +32,7 @@ run-vbox: haribote.img
 	virtualbox --startvm "Haribote OS"
 	
 run: haribote.img
-	qemu-system-i386 -m 128 -fda haribote.img -enable-kvm
+	qemu-system-i386 -m 32 -fda haribote.img -enable-kvm
 
 run-noframe: haribote.img
 	qemu-system-i386 -m 32 -no-frame -fda haribote.img -enable-kvm
