@@ -73,7 +73,7 @@ void sheet_updown(Sheet *sht, int height){
             sheet_refreshmap(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, 0);
             sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, 0, old - 1);
         }
-    }else{
+    }else if(old < height){
         if(old>=0){
             for(h=old;h<height;h++){
                 ctl->sheets[h]=ctl->sheets[h+1];

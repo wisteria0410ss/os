@@ -16,10 +16,13 @@ void os_main(void){
 	init_gdtidt();
 	init_pic();
 	io_sti();
-	init_pit();
-
 	fifo8_init(&keyfifo, 32, keybuf);
 	fifo8_init(&mousefifo, 128, mousebuf);
+
+	init_pit();
+	io_out8(PIC0_IMR, 0xf8);
+	io_out8(PIC1_IMR, 0xef);
+
 	const int timeout[3] = {1000, 300, 50}, timer_data[3] = {10, 3, 1};
 	fifo8_init(&timerfifo, 8, timerbuf);
 	for(int i=0;i<3;i++){
@@ -27,9 +30,6 @@ void os_main(void){
 		timer_init(timer[i], &timerfifo, timer_data[i]);
 		timer_settime(timer[i], timeout[i]);
 	}
-
-	io_out8(PIC0_IMR, 0xf8);
-	io_out8(PIC1_IMR, 0xef);
 
 	init_keyboard();
 	enable_mouse(&mdec);
@@ -74,8 +74,6 @@ void os_main(void){
 
 	while(1){
 		count++;
-		msprintf(s, "%010d", timerctl.count);
-		putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
 
 		io_cli();
 		if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0){
@@ -112,9 +110,12 @@ void os_main(void){
 				switch(i){
 				case 10:
 					putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec.", 7);
+					msprintf(s, "%010d", count);
+					putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
 					break;
 				case 3:
 					putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3 sec.", 6);
+					count = 0;
 					break;
 				default:
 					if(i != 0){

@@ -28,11 +28,14 @@ haribote.img: ipl.bin haribote.sys Makefile
 
 img: haribote.img
 
+run-vbox: haribote.img
+	virtualbox --startvm "Haribote OS"
+	
 run: haribote.img
-	qemu-system-i386 -m 32 -fda haribote.img
+	qemu-system-i386 -m 128 -fda haribote.img -enable-kvm
 
 run-noframe: haribote.img
-	qemu-system-i386 -m 32 -no-frame -fda haribote.img
+	qemu-system-i386 -m 32 -no-frame -fda haribote.img -enable-kvm
 
 clean:
 	rm *.bin *.sys *.lst *.img *.hrb *.o *.out hankaku.c

@@ -20,6 +20,7 @@ void init_palette(){
 		0x84, 0x84, 0x84	//15: dark gray
 	};
 	set_palette(0, 15, table_rgb);
+	return;
 }
 
 void set_palette(int start, int end, unsigned char *rgb){
@@ -28,9 +29,10 @@ void set_palette(int start, int end, unsigned char *rgb){
 	io_cli();
 	io_out8(0x03c8, start);
 	for(int i=start;i<=end;i++){
-		io_out8(0x03c9, rgb[3*i+0]/4);
-		io_out8(0x03c9, rgb[3*i+1]/4);
-		io_out8(0x03c9, rgb[3*i+2]/4);
+		io_out8(0x03c9, rgb[0]/4);
+		io_out8(0x03c9, rgb[1]/4);
+		io_out8(0x03c9, rgb[2]/4);
+		rgb += 3;
 	}
 	io_store_eflags(eflags);
 	return;
@@ -53,6 +55,8 @@ void init_screen(char *vram, int xsize, int ysize){
 	boxfill8(vram, xsize, COL8_848484,	xsize-47,	ysize-23,	xsize-47,	ysize- 4);
 	boxfill8(vram, xsize, COL8_FFFFFF,	xsize-47,	ysize- 3,	xsize- 4,	ysize- 3);
 	boxfill8(vram, xsize, COL8_FFFFFF,	xsize- 3,	ysize-24,	xsize- 3,	ysize- 3);
+	
+	return;
 }
 
 void init_mouse_cursor8(char *mouse, char bc){
