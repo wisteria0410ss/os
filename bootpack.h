@@ -198,7 +198,7 @@ typedef struct Timer{
 	int data;
 } Timer;
 typedef struct{
-	unsigned int count, next, num_using;
+	unsigned int count, next;
 	Timer *t0;
 	Timer timers0[MAX_TIMER];
 } TimerCtl;
