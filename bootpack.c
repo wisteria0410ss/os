@@ -71,6 +71,12 @@ void os_main(void){
 	putfonts8_asc(buf_back, binfo->scrnx, binfo->scrnx-8*12-1, binfo->scrny-47, COL8_FFFFFF, "Haribote OS.");
 	sheet_refresh(sht_back, binfo->scrnx-8*12-1, binfo->scrny-47, binfo->scrnx, binfo->scrny);
 
+	static char keytable[0x3a] = {
+		0,	0,	'1','2','3','4','5','6','7','8','9','0','-','^',0,	0,	
+		'Q','W','E','R','T','Y','U','I','O','P','@','[',0,	0,	'A','B',
+		'D','F','G','H','J','K','L',';',':',0,	0,	']','Z','X','C','V',
+		'B','N','M',',','.','/',0,	'*',0,	' '
+	};
 	while(1){
 		io_cli();
 		if(fifo32_status(&fifo) == 0){
@@ -81,7 +87,13 @@ void os_main(void){
 			if(256 <= i && i < 512){
 				msprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
-				if(i == 0x1e + 256) putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, "A", 1);
+				if(i < 256 + 0x3a){
+					if(keytable[i-256] != 0){
+						s[0] = keytable[i-256];
+						s[1] = 0;
+						putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 1);
+					}
+				}
 			}else if(512 <= i && i < 768){
 				if(mouse_decode(&mdec, i - 512) != 0){
 					msprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);

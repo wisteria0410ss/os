@@ -7,11 +7,11 @@ int main(){
         return 1;
     }
 
-    printf("char hankaku[4096] = {");
+    printf("char *get_fontdata(){\n\tstatic char hankaku[4096] = {");
     char c[256];
     while(fgets(c, 256, fp)!=NULL){
         if(c[0]=='c'){
-            printf("\n");
+            printf("\n\t");
             continue;
         }
 
@@ -23,6 +23,6 @@ int main(){
             printf("\t%d,", d);
         }
     }
-    printf("\n};\n");
+    printf("\n\t};\n\treturn hankaku;\n}\n");
     return 0;
 }
