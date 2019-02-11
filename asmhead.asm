@@ -8,7 +8,7 @@ vmode   equ 0x0ff2          ; 色数
 scrnx   equ 0x0ff4          ; X解像度
 scrny   equ 0x0ff6          ; Y解像度
 vram    equ 0x0ff8          ; グラフィックバッファの開始番地
-vbemode equ 0x107           ; 画面モード
+vbemode equ 893           ; 画面モード
 
     org     0xc200
 
