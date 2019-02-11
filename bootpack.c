@@ -51,7 +51,7 @@ void os_main(void){
 	init_screen(buf_back, binfo->scrnx, binfo->scrny);
 	init_mouse_cursor8(buf_mouse, 99);
 
-	make_window8(buf_win, 160, 52, "counter");
+	make_window8(buf_win, 160, 52, "window");
 
 	sheet_slide(sht_back, 0, 0);
 	mx = (binfo->scrnx - 16) / 2;
@@ -72,8 +72,6 @@ void os_main(void){
 	sheet_refresh(sht_back, binfo->scrnx-8*12-1, binfo->scrny-47, binfo->scrnx, binfo->scrny);
 
 	while(1){
-		count++;
-
 		io_cli();
 		if(fifo32_status(&fifo) == 0){
 			io_stihlt();
@@ -83,6 +81,7 @@ void os_main(void){
 			if(256 <= i && i < 512){
 				msprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
+				if(i == 0x1e + 256) putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, "A", 1);
 			}else if(512 <= i && i < 768){
 				if(mouse_decode(&mdec, i - 512) != 0){
 					msprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
@@ -105,8 +104,6 @@ void os_main(void){
 				switch(i){
 				case 10:
 					putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec.", 7);
-					msprintf(s, "%010d", count);
-					putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
 					break;
 				case 3:
 					putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3 sec.", 6);
