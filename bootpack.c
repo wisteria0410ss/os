@@ -122,6 +122,7 @@ void os_main(void){
 					msprintf(s, "(%4d, %4d)", mx, my);
 					putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 12);
 					sheet_slide(sht_mouse, mx, my);	// refreshを含む
+					if((mdec.btn & 0x01) != 0)sheet_slide(sht_win, mx-80, my-8);
 				}
 			}else{
 				switch(i){
