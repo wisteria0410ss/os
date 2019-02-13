@@ -28,6 +28,8 @@ extern void asm_inthandler21(void);
 extern void asm_inthandler27(void);
 extern void asm_inthandler2c(void);
 extern unsigned int memtest_sub(unsigned int, unsigned int);
+extern void load_tr(int);
+extern void taskswitch4(void);
 
 // memory.c
 #define MEMMAN_FREES	4090
@@ -126,6 +128,7 @@ void set_gatedesc(GateDescriptor *, int, int, int);
 #define LIMIT_BOTPAK    0x0007ffff
 #define AR_DATA32_RW    0x4092
 #define AR_CODE32_ER    0x409a
+#define AR_TSS32		0x0089
 #define AR_INTGATE32	0x008e
 
 // fifo.c
@@ -214,6 +217,13 @@ void inthandler20(int *);
 char *get_fontdata(void);
 
 // bootpack.c
+typedef struct{
+	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
+	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
+	int es, cs, ss, ds, fs, gs;
+	int ldtr, iomap;
+} TSS32;
 void make_window8(unsigned char *, int, int, char *);
 void make_textbox8(Sheet *, int, int, int, int, int);
 void set490(FIFO32 *, int);
+void task_b_main(void);
