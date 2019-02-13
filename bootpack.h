@@ -30,6 +30,7 @@ extern void asm_inthandler2c(void);
 extern unsigned int memtest_sub(unsigned int, unsigned int);
 extern void load_tr(int);
 extern void taskswitch4(void);
+extern void taskswitch3(void);
 
 // memory.c
 #define MEMMAN_FREES	4090

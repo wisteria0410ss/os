@@ -267,7 +267,23 @@ void set490(FIFO32 *fifo, int mode){
 }
 
 void task_b_main(){
+	FIFO32 fifo;
+	Timer *timer;
+	int i, fifobuf[128];
+
+	fifo32_init(&fifo, 32, fifobuf);
+	timer = timer_alloc();
+	timer_init(timer, &fifo, 1);
+	timer_settime(timer, 300);
+
 	while(1){
-		io_hlt();
+		io_cli();
+		if(fifo32_status(&fifo) == 0){
+			io_stihlt();
+		}else{
+			i = fifo32_pop(&fifo);
+			io_sti();
+			if(i==1) taskswitch3();
+		}
 	}
 }

@@ -6,7 +6,7 @@ section .text
     global load_gdtr, load_idtr
     global asm_inthandler20, asm_inthandler21, asm_inthandler27, asm_inthandler2c
     global load_cr0, store_cr0
-    global load_tr, taskswitch4
+    global load_tr, taskswitch4, taskswitch3
     global memtest_sub
     extern inthandler20, inthandler21, inthandler27, inthandler2c
 
@@ -198,4 +198,7 @@ load_tr:    ; void load_tr(int);
 taskswitch4:    ; void taskswitch4(void);
     jmp     4*8:0
     ret
-    
+
+taskswitch3:    ; void taskswitch3(void);
+    jmp     3*8:0
+    ret
