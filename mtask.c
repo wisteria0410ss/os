@@ -1,19 +1,67 @@
 #include "bootpack.h"
 
-Timer *mt_timer;
-int mt_tr;
+TaskCtl *taskctl;
+Timer *task_timer;
 
-void mt_init(){
-    mt_timer = timer_alloc();
-    timer_settime(mt_timer, 2);
-    mt_tr = 3*8;
+Task *task_init(MemMan *memman){
+    Task *task;
+    SegmentDescriptor *gdt = (SegmentDescriptor *)ADR_GDT;
+    taskctl = (TaskCtl *)memman_alloc_4k(memman, sizeof(TaskCtl));
+    for(int i=0;i<MAX_TASKS;i++){
+        taskctl->tasks0[i].flags = 0;
+        taskctl->tasks0[i].sel = (TASK_GDT0 + i) * 8;
+        set_segmdesc(gdt + TASK_GDT0 + i, 103, (int)&taskctl->tasks0[i].tss, AR_TSS32);
+    }
+    task = task_alloc();
+    task->flags = 2;
+    taskctl->runnning = 1;
+    taskctl->now = 0;
+    taskctl->tasks[0] = task;
+    load_tr(task->sel);
+    task_timer = timer_alloc();
+    timer_settime(task_timer, 2);
+
+    return task;
+}
+
+Task *task_alloc(){
+    Task *task;
+    for(int i=0;i<MAX_TASKS;i++){
+        if(taskctl->tasks0[i].flags == 0){
+            task = &taskctl->tasks0[i];
+            task->flags = 1;
+            task->tss.eflags = 0x00000202;
+            task->tss.eax = 0;
+            task->tss.ecx = 0;
+            task->tss.edx = 0;
+            task->tss.ebx = 0;
+            task->tss.ebp = 0;
+            task->tss.esi = 0;
+            task->tss.edi = 0;
+            task->tss.es = 0;
+            task->tss.ds = 0;
+            task->tss.fs = 0;
+            task->tss.gs = 0;
+            task->tss.ldtr = 0;
+            task->tss.iomap = 0x40000000;
+            return task;
+        }
+    }
+    return 0;
+}
+
+void task_run(Task *task){
+    task->flags = 2;
+    taskctl->tasks[taskctl->runnning] = task;
+    taskctl->runnning++;
     return;
 }
 
-void mt_taskswitch(){
-    if(mt_tr == 3*8) mt_tr = 4*8;
-    else mt_tr = 3*8;
-    timer_settime(mt_timer, 2);
-    farjmp(0, mt_tr);
+void task_switch(){
+    timer_settime(task_timer, 2);
+    if(taskctl->runnning >= 2){
+        taskctl->now = (taskctl->now + 1) % taskctl->runnning;
+        farjmp(0, taskctl->tasks[taskctl->now]->sel);
+    }
     return;
 }

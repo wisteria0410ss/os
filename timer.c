@@ -83,7 +83,7 @@ void inthandler20(int *esp){
     while(1){
         if(timer->timeout > timerctl.count) break;
         timer->flags = TIMER_FLAGS_ALLOC;
-        if(timer != mt_timer) fifo32_push(timer->fifo, timer->data);
+        if(timer != task_timer) fifo32_push(timer->fifo, timer->data);
         else ts = 1;
         timer = timer->next_timer;
     }
@@ -91,7 +91,7 @@ void inthandler20(int *esp){
     timerctl.t0 = timer;
     timerctl.next = timerctl.t0->timeout;
     
-    if(ts != 0) mt_taskswitch();
+    if(ts != 0) task_switch();
     
     return;
 }

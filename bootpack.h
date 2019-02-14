@@ -214,20 +214,34 @@ void timer_settime(Timer *, unsigned int);
 void inthandler20(int *);
 
 // mtask.c
-extern Timer *mt_timer;
-void mt_init(void);
-void mt_taskswitch(void);
-
-// hankaku.c
-char *get_fontdata(void);
-
-// bootpack.c
+#define MAX_TASKS 1000
+#define TASK_GDT0 3
 typedef struct{
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
 	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
 	int es, cs, ss, ds, fs, gs;
 	int ldtr, iomap;
 } TSS32;
+typedef struct{
+	int sel, flags;
+	TSS32 tss;
+}Task;
+typedef struct{
+	int runnning;
+	int now;
+	Task *tasks[MAX_TASKS];
+	Task tasks0[MAX_TASKS];
+}TaskCtl;
+extern Timer *task_timer;
+Task *task_init(MemMan *);
+Task *task_alloc(void);
+void task_run(Task *);
+void task_switch(void);
+
+// hankaku.c
+char *get_fontdata(void);
+
+// bootpack.c
 void make_window8(unsigned char *, int, int, char *);
 void make_textbox8(Sheet *, int, int, int, int, int);
 void set490(FIFO32 *, int);
