@@ -225,6 +225,7 @@ typedef struct{
 } TSS32;
 typedef struct Task{
 	int sel, flags;
+	int priority;
 	TSS32 tss;
 }Task;
 typedef struct{
@@ -236,7 +237,7 @@ typedef struct{
 extern Timer *task_timer;
 Task *task_init(MemMan *);
 Task *task_alloc(void);
-void task_run(Task *);
+void task_run(Task *, int);
 void task_switch(void);
 void task_sleep(Task *);
 

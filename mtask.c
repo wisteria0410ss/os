@@ -14,6 +14,7 @@ Task *task_init(MemMan *memman){
     }
     task = task_alloc();
     task->flags = 2;
+    task->priority = 2;
     taskctl->runnning = 1;
     taskctl->now = 0;
     taskctl->tasks[0] = task;
@@ -30,6 +31,7 @@ Task *task_alloc(){
         if(taskctl->tasks0[i].flags == 0){
             task = &taskctl->tasks0[i];
             task->flags = 1;
+            task->priority = 2;
             task->tss.eflags = 0x00000202;
             task->tss.eax = 0;
             task->tss.ecx = 0;
@@ -50,19 +52,24 @@ Task *task_alloc(){
     return 0;
 }
 
-void task_run(Task *task){
-    task->flags = 2;
-    taskctl->tasks[taskctl->runnning] = task;
-    taskctl->runnning++;
+void task_run(Task *task, int priority){
+    if(priority > 0) task->priority = priority;
+    if(task->flags != 2){
+        task->flags = 2;
+        taskctl->tasks[taskctl->runnning] = task;
+        taskctl->runnning++;
+    }
     return;
 }
 
 void task_switch(){
-    timer_settime(task_timer, 2);
-    if(taskctl->runnning >= 2){
-        taskctl->now = (taskctl->now + 1) % taskctl->runnning;
-        farjmp(0, taskctl->tasks[taskctl->now]->sel);
-    }
+    Task *task;
+    taskctl->now = (taskctl->now + 1) % taskctl->runnning;
+    task = taskctl->tasks[taskctl->now];
+    timer_settime(task_timer, task->priority);
+
+    if(taskctl->runnning >= 2) farjmp(0, task->sel);
+    
     return;
 }
 
