@@ -65,3 +65,22 @@ void task_switch(){
     }
     return;
 }
+
+void task_sleep(Task *task){
+    int i;
+    char ts = 0;
+    if(task->flags == 2){
+        if(task == taskctl->tasks[taskctl->now]) ts = 1;
+        for(i=0;i<taskctl->runnning;i++){
+            if(taskctl->tasks[i] == task) break;
+        }
+        taskctl->runnning--;
+        if(i < taskctl->now) taskctl->now--;
+        for(;i<taskctl->runnning;i++) taskctl->tasks[i] = taskctl->tasks[i+1];
+        task->flags = 1;
+        if(ts != 0){
+            if(taskctl->now >= taskctl->runnning) taskctl->now = 0;
+            farjmp(0, taskctl->tasks[taskctl->now]->sel);
+        }
+    }
+}

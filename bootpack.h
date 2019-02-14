@@ -139,12 +139,13 @@ typedef struct{
 typedef struct{
 	int *buf;
 	int p, q, size, free, flags;
+	struct Task *task;
 } FIFO32;
 void fifo8_init(FIFO8 *, int, unsigned char *);
 int fifo8_push(FIFO8 *, unsigned char);
 int fifo8_pop(FIFO8 *);
 int fifo8_status(FIFO8 *);
-void fifo32_init(FIFO32 *, int, int *);
+void fifo32_init(FIFO32 *, int, int *, struct Task *);
 int fifo32_push(FIFO32 *, int);
 int fifo32_pop(FIFO32 *);
 int fifo32_status(FIFO32 *);
@@ -222,7 +223,7 @@ typedef struct{
 	int es, cs, ss, ds, fs, gs;
 	int ldtr, iomap;
 } TSS32;
-typedef struct{
+typedef struct Task{
 	int sel, flags;
 	TSS32 tss;
 }Task;
@@ -237,6 +238,7 @@ Task *task_init(MemMan *);
 Task *task_alloc(void);
 void task_run(Task *);
 void task_switch(void);
+void task_sleep(Task *);
 
 // hankaku.c
 char *get_fontdata(void);
