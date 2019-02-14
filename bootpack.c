@@ -8,7 +8,7 @@ void os_main(void){
 	Timer *timer[3], *timer_ts;
 	int mx, my;
 	int cursor_x, cursor_c;
-	unsigned int memtotal, count = 0;
+	unsigned int memtotal;
 	MouseDec mdec;
 	MemMan *memman = (MemMan *)MEMMAN_ADDR;
 	ShtCtl *shtctl;
@@ -27,10 +27,10 @@ void os_main(void){
 	io_sti();
 
 	fifo32_init(&fifo, 128, fifobuf);
+	init_pit();
+	
 	init_keyboard(&fifo, 256);
 	enable_mouse(&fifo, 512, &mdec);
-
-	init_pit();
 	io_out8(PIC0_IMR, 0xf8);
 	io_out8(PIC1_IMR, 0xef);
 
@@ -96,7 +96,8 @@ void os_main(void){
 	set_segmdesc(gdt + 3, 103, (int)&tss_a, AR_TSS32);
 	set_segmdesc(gdt + 4, 103, (int)&tss_b, AR_TSS32);
 	load_tr(3*8);
-	task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024;
+	task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+	*((int *)(task_b_esp + 4)) = (int)sht_back;
 	tss_b.eip = (int)&task_b_main;
 	tss_b.eflags = 0x00000202;
 	tss_b.eax = 0;
@@ -113,7 +114,7 @@ void os_main(void){
 	tss_b.ds = 1*8;
 	tss_b.fs = 1*8;
 	tss_b.gs = 1*8;
-	
+	mt_init();
 
 	while(1){
 		io_cli();
@@ -165,7 +166,6 @@ void os_main(void){
 					break;
 				case 3:
 					putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3 sec.", 6);
-					count = 0;
 					break;
 				case 2:
 					farjmp(0, 4*8);
@@ -272,26 +272,40 @@ void set490(FIFO32 *fifo, int mode){
 	return;
 }
 
-void task_b_main(){
+void task_b_main(Sheet *sht_back){
 	FIFO32 fifo;
-	Timer *timer_ts;
+	Timer *timer_put, *timer_1s;
 	int i, fifobuf[128];
+	unsigned int count = 0, count0 = 0;
+	char s[12];
 
-	fifo32_init(&fifo, 32, fifobuf);
-	timer_ts = timer_alloc();
-	timer_init(timer_ts, &fifo, 1);
-	timer_settime(timer_ts, 2);
-
+	fifo32_init(&fifo, 128, fifobuf);
+	timer_put = timer_alloc();
+	timer_init(timer_put, &fifo, 1);
+	timer_settime(timer_put, 1);
+	timer_1s = timer_alloc();
+	timer_init(timer_1s, &fifo, 100);
+	timer_settime(timer_1s, 100);
+	
 	while(1){
+		count++;
 		io_cli();
 		if(fifo32_status(&fifo) == 0){
-			io_stihlt();
+			io_sti();
 		}else{
 			i = fifo32_pop(&fifo);
 			io_sti();
-			if(i==1){
-				farjmp(0, 3*8);
-				timer_settime(timer_ts, 2);
+			switch(i){
+				case 1:
+					msprintf(s, "%010u", count);
+					putfonts8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 10);
+					timer_settime(timer_put, 1);
+					break;
+				case 100:
+					msprintf(s, "%-10u", count-count0);
+					putfonts8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
+					count0 = count;
+					timer_settime(timer_1s, 100);
 			}
 		}
 	}

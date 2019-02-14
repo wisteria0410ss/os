@@ -195,6 +195,7 @@ load_tr:    ; void load_tr(int);
     ltr     [esp+4]
     ret
 
-farjmp:     ; void farjmp(int, int)
+farjmp:     ; void farjmp(int, int);
     jmp     far [esp+4]
     ret
+    

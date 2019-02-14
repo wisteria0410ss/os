@@ -74,6 +74,7 @@ void timer_settime(Timer *timer, unsigned int timeout){
 }
 
 void inthandler20(int *esp){
+    char ts = 0;
     Timer *timer;
     io_out8(PIC0_OCW2, 0x60);       // IRQ-00受付完了をPICに通知
     timerctl.count++;
@@ -82,12 +83,15 @@ void inthandler20(int *esp){
     while(1){
         if(timer->timeout > timerctl.count) break;
         timer->flags = TIMER_FLAGS_ALLOC;
-        fifo32_push(timer->fifo, timer->data);
+        if(timer != mt_timer) fifo32_push(timer->fifo, timer->data);
+        else ts = 1;
         timer = timer->next_timer;
     }
 
     timerctl.t0 = timer;
     timerctl.next = timerctl.t0->timeout;
+    
+    if(ts != 0) mt_taskswitch();
     
     return;
 }
