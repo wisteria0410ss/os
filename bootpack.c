@@ -5,7 +5,7 @@ void os_main(void){
 	FIFO32 fifo;
 	char s[40];
 	int fifobuf[128];
-	Timer *timer[3];
+	Timer *timer[3], *timer_ts;
 	int mx, my;
 	int cursor_x, cursor_c;
 	unsigned int memtotal, count = 0;
@@ -37,6 +37,9 @@ void os_main(void){
 		timer_init(timer[i], &fifo, timer_data[i]);
 		timer_settime(timer[i], timeout[i]);
 	}
+	timer_ts = timer_alloc();
+	timer_init(timer_ts, &fifo, 2);
+	timer_settime(timer_ts, 2);
 	
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
@@ -159,11 +162,14 @@ void os_main(void){
 				switch(i){
 				case 10:
 					putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10 sec.", 7);
-					taskswitch4();
 					break;
 				case 3:
 					putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3 sec.", 6);
 					count = 0;
+					break;
+				case 2:
+					farjmp(0, 4*8);
+					timer_settime(timer_ts, 2);
 					break;
 				case 1:
 					timer_init(timer[2], &fifo, 0);
@@ -268,13 +274,13 @@ void set490(FIFO32 *fifo, int mode){
 
 void task_b_main(){
 	FIFO32 fifo;
-	Timer *timer;
+	Timer *timer_ts;
 	int i, fifobuf[128];
 
-	fifo32_init(&fifo, 32, fifobuf);
-	timer = timer_alloc();
-	timer_init(timer, &fifo, 1);
-	timer_settime(timer, 300);
+	fifo32_init(&fifo, 128, fifobuf);
+	timer_ts = timer_alloc();
+	timer_init(timer_ts, &fifo, 1);
+	timer_settime(timer_ts, 2);
 
 	while(1){
 		io_cli();
@@ -283,7 +289,10 @@ void task_b_main(){
 		}else{
 			i = fifo32_pop(&fifo);
 			io_sti();
-			if(i==1) taskswitch3();
+			if(i==1){
+				farjmp(0, 3*8);
+				timer_settime(timer_ts, 2);
+			}
 		}
 	}
 }
