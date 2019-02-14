@@ -274,10 +274,10 @@ void set490(FIFO32 *fifo, int mode){
 
 void task_b_main(Sheet *sht_back){
 	FIFO32 fifo;
-	Timer *timer_ts, *timer_put;
+	Timer *timer_ts, *timer_put, *timer_1s;
 	int i, fifobuf[128];
-	unsigned int count = 0;
-	char s[11];
+	unsigned int count = 0, count0 = 0;
+	char s[12];
 
 	fifo32_init(&fifo, 128, fifobuf);
 	timer_ts = timer_alloc();
@@ -285,7 +285,10 @@ void task_b_main(Sheet *sht_back){
 	timer_settime(timer_ts, 2);
 	timer_put = timer_alloc();
 	timer_init(timer_put, &fifo, 1);
-	timer_settime(timer_put, 1);
+	//timer_settime(timer_put, 1);
+	timer_1s = timer_alloc();
+	timer_init(timer_1s, &fifo, 100);
+	timer_settime(timer_1s, 100);
 	
 	while(1){
 		count++;
@@ -305,6 +308,11 @@ void task_b_main(Sheet *sht_back){
 					farjmp(0, 3*8);
 					timer_settime(timer_ts, 2);
 					break;
+				case 100:
+					msprintf(s, "%11u", count-count0);
+					putfonts8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
+					count0 = count;
+					timer_settime(timer_1s, 100);
 			}
 		}
 	}
