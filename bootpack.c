@@ -295,7 +295,7 @@ void task_b_main(Sheet *sht_back){
 					timer_settime(timer_put, 1);
 					break;
 				case 100:
-					msprintf(s, "%11u", count-count0);
+					msprintf(s, "%-10u", count-count0);
 					putfonts8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
 					count0 = count;
 					timer_settime(timer_1s, 100);
