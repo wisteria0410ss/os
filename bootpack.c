@@ -5,10 +5,10 @@ void os_main(void){
 	FIFO32 fifo;
 	char s[40];
 	int fifobuf[128];
-	Timer *timer[3], *timer_ts;
+	Timer *timer[3];
 	int mx, my;
 	int cursor_x, cursor_c;
-	unsigned int memtotal, count = 0;
+	unsigned int memtotal;
 	MouseDec mdec;
 	MemMan *memman = (MemMan *)MEMMAN_ADDR;
 	ShtCtl *shtctl;
@@ -24,10 +24,10 @@ void os_main(void){
 	io_sti();
 
 	fifo32_init(&fifo, 128, fifobuf);
+	init_pit();
+	
 	init_keyboard(&fifo, 256);
 	enable_mouse(&fifo, 512, &mdec);
-
-	init_pit();
 	io_out8(PIC0_IMR, 0xf8);
 	io_out8(PIC1_IMR, 0xef);
 
@@ -37,9 +37,6 @@ void os_main(void){
 		timer_init(timer[i], &fifo, timer_data[i]);
 		timer_settime(timer[i], timeout[i]);
 	}
-	timer_ts = timer_alloc();
-	timer_init(timer_ts, &fifo, 2);
-	timer_settime(timer_ts, 2);
 	
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
@@ -114,6 +111,7 @@ void os_main(void){
 	tss_b.ds = 1*8;
 	tss_b.fs = 1*8;
 	tss_b.gs = 1*8;
+	mt_init();
 
 	while(1){
 		io_cli();
@@ -165,11 +163,6 @@ void os_main(void){
 					break;
 				case 3:
 					putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3 sec.", 6);
-					count = 0;
-					break;
-				case 2:
-					farjmp(0, 4*8);
-					timer_settime(timer_ts, 2);
 					break;
 				case 1:
 					timer_init(timer[2], &fifo, 0);
@@ -274,18 +267,15 @@ void set490(FIFO32 *fifo, int mode){
 
 void task_b_main(Sheet *sht_back){
 	FIFO32 fifo;
-	Timer *timer_ts, *timer_put, *timer_1s;
+	Timer *timer_put, *timer_1s;
 	int i, fifobuf[128];
 	unsigned int count = 0, count0 = 0;
 	char s[12];
 
 	fifo32_init(&fifo, 128, fifobuf);
-	timer_ts = timer_alloc();
-	timer_init(timer_ts, &fifo, 2);
-	timer_settime(timer_ts, 2);
 	timer_put = timer_alloc();
 	timer_init(timer_put, &fifo, 1);
-	//timer_settime(timer_put, 1);
+	timer_settime(timer_put, 1);
 	timer_1s = timer_alloc();
 	timer_init(timer_1s, &fifo, 100);
 	timer_settime(timer_1s, 100);
@@ -303,10 +293,6 @@ void task_b_main(Sheet *sht_back){
 					msprintf(s, "%010u", count);
 					putfonts8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 10);
 					timer_settime(timer_put, 1);
-					break;
-				case 2:
-					farjmp(0, 3*8);
-					timer_settime(timer_ts, 2);
 					break;
 				case 100:
 					msprintf(s, "%11u", count-count0);

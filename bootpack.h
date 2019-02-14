@@ -213,6 +213,11 @@ void timer_init(Timer *, FIFO32 *, int);
 void timer_settime(Timer *, unsigned int);
 void inthandler20(int *);
 
+// mtask.c
+extern Timer *mt_timer;
+void mt_init(void);
+void mt_taskswitch(void);
+
 // hankaku.c
 char *get_fontdata(void);
 

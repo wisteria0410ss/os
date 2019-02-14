@@ -16,8 +16,8 @@ makefont.out: makefont.c
 hankaku.c: makefont.out hankaku.txt
 	./makefont.out > hankaku.c
 
-bootpack.hrb: bootpack.c bootpack.h graphic.c dsctbl.c int.c keyboard.c mouse.c fifo.c memory.c sheet.c timer.c har.lds sprintf.c hankaku.c func.o Makefile
-	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -T har.lds bootpack.c graphic.c dsctbl.c int.c keyboard.c mouse.c fifo.c memory.c sheet.c timer.c sprintf.c hankaku.c func.o -o bootpack.hrb
+bootpack.hrb: bootpack.c bootpack.h graphic.c dsctbl.c int.c keyboard.c mouse.c fifo.c memory.c sheet.c timer.c mtask.c har.lds sprintf.c hankaku.c func.o Makefile
+	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -T har.lds bootpack.c graphic.c dsctbl.c int.c keyboard.c mouse.c fifo.c memory.c sheet.c timer.c mtask.c sprintf.c hankaku.c func.o -o bootpack.hrb
 	
 haribote.sys: asmhead.bin bootpack.hrb Makefile
 	cat asmhead.bin bootpack.hrb > haribote.sys
