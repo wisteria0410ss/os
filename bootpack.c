@@ -5,7 +5,7 @@ void os_main(void){
 	FIFO32 fifo;
 	char s[40];
 	int fifobuf[128];
-	Timer *timer[3], *timer_ts;
+	Timer *timer[3];
 	int mx, my;
 	int cursor_x, cursor_c;
 	unsigned int memtotal;
@@ -18,9 +18,6 @@ void os_main(void){
 	int task_b_esp;
 	TSS32 tss_a, tss_b;
 	SegmentDescriptor *gdt = (SegmentDescriptor *)ADR_GDT;
-	timer_ts = timer_alloc();
-	timer_init(timer_ts, &fifo, 2);
-	timer_settime(timer_ts, 2);
 
 	init_gdtidt();
 	init_pic();
@@ -166,10 +163,6 @@ void os_main(void){
 					break;
 				case 3:
 					putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3 sec.", 6);
-					break;
-				case 2:
-					farjmp(0, 4*8);
-					timer_settime(timer_ts, 2);
 					break;
 				case 1:
 					timer_init(timer[2], &fifo, 0);
