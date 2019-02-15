@@ -9,6 +9,12 @@ void os_main(void){
 	int mx, my;
 	int cursor_x, cursor_c;
 	unsigned int memtotal;
+	static char keytable[0x3a] = {
+		0,	0,	'1','2','3','4','5','6','7','8','9','0','-','^',0,	0,	
+		'Q','W','E','R','T','Y','U','I','O','P','@','[',0,	0,	'A','S',
+		'D','F','G','H','J','K','L',';',':',0,	0,	']','Z','X','C','V',
+		'B','N','M',',','.','/',0,	'*',0,	' '
+	};
 	MouseDec mdec;
 	MemMan *memman = (MemMan *)MEMMAN_ADDR;
 	ShtCtl *shtctl;
@@ -100,13 +106,6 @@ void os_main(void){
 	putfonts8_asc(buf_back, binfo->scrnx, binfo->scrnx-8*12, binfo->scrny-46, COL8_000000, "Haribote OS.");
 	putfonts8_asc(buf_back, binfo->scrnx, binfo->scrnx-8*12-1, binfo->scrny-47, COL8_FFFFFF, "Haribote OS.");
 	sheet_refresh(sht_back, binfo->scrnx-8*12-1, binfo->scrny-47, binfo->scrnx, binfo->scrny);
-
-	static char keytable[0x3a] = {
-		0,	0,	'1','2','3','4','5','6','7','8','9','0','-','^',0,	0,	
-		'Q','W','E','R','T','Y','U','I','O','P','@','[',0,	0,	'A','S',
-		'D','F','G','H','J','K','L',';',':',0,	0,	']','Z','X','C','V',
-		'B','N','M',',','.','/',0,	'*',0,	' '
-	};
 
 	while(1){
 		io_cli();
