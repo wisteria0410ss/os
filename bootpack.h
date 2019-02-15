@@ -228,6 +228,7 @@ typedef struct{
 typedef struct Task{
 	int sel, flags;
 	int level, priority;
+	FIFO32 fifo;
 	TSS32 tss;
 }Task;
 typedef struct TaskLevel{
