@@ -8,7 +8,7 @@ void os_main(void){
 	Timer *timer;
 	int mx, my;
 	int cursor_x, cursor_c;
-	int key_to = 0, key_shift = 0;
+	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7;
 	unsigned int memtotal;
 	static char keytable[2][0x80] = {{
 		0,	0,	'1','2','3','4','5','6','7','8','9','0','-','^',0,	0,	
@@ -130,6 +130,9 @@ void os_main(void){
 				putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
 				if(i < 256 + 0x80) s[0] = keytable[key_shift!=0][i-256];
 				else s[0] = 0;
+				if('A' <= s[0] && s[0]<='Z'){
+					if(((key_leds&4)==1) == (key_shift!=0)) s[0] += 0x20;
+				}
 				if(s[0] != 0){
 					if(key_to == 0){	// task_A
 						if(cursor_x < 128){
