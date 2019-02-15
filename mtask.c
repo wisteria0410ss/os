@@ -4,7 +4,7 @@ TaskCtl *taskctl;
 Timer *task_timer;
 
 Task *task_init(MemMan *memman){
-    Task *task;
+    Task *task, *idle;
     SegmentDescriptor *gdt = (SegmentDescriptor *)ADR_GDT;
     taskctl = (TaskCtl *)memman_alloc_4k(memman, sizeof(TaskCtl));
     for(int i=0;i<MAX_TASKS;i++){
@@ -26,6 +26,17 @@ Task *task_init(MemMan *memman){
     task_timer = timer_alloc();
     timer_settime(task_timer, task->priority);
 
+    idle = task_alloc();
+    idle->tss.esp = memman_alloc_4k(memman, 64*1024) + 64*1024;
+    idle->tss.eip = (int)&task_idle;
+    idle->tss.es  = 1*8;
+    idle->tss.cs  = 2*8;
+    idle->tss.ss  = 1*8;
+    idle->tss.ds  = 1*8;
+    idle->tss.fs  = 1*8;
+    idle->tss.gs  = 1*8;
+    task_run(idle, MAX_TASKLEVELS - 1, 1);
+    
     return task;
 }
 
@@ -140,4 +151,8 @@ void task_switchsub(){
     taskctl->now_lv = i;
     taskctl->lv_change = 0;
     return;
+}
+
+void task_idle(){
+    while(1) io_hlt();
 }

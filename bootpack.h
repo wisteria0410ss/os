@@ -251,6 +251,7 @@ Task *task_now(void);
 void task_add(Task *);
 void task_remove(Task *);
 void task_switchsub(void);
+void task_idle(void);
 
 // hankaku.c
 char *get_fontdata(void);
