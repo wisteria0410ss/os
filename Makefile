@@ -32,10 +32,10 @@ run-vbox: haribote.img
 	virtualbox --startvm "Haribote OS"
 	
 run: haribote.img
-	qemu-system-i386 -m 32 -fda haribote.img -enable-kvm
+	qemu-system-i386 -m 32 -drive file=haribote.img,format=raw,if=floppy -enable-kvm
 
 run-noframe: haribote.img
-	qemu-system-i386 -m 32 -no-frame -fda haribote.img -enable-kvm
+	qemu-system-i386 -m 32 -no-frame -drive file=haribote.img,format=raw,if=floppy -enable-kvm
 
 clean:
 	rm *.bin *.sys *.lst *.img *.hrb *.o *.out hankaku.c
