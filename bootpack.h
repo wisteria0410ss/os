@@ -260,6 +260,7 @@ char *get_fontdata(void);
 #define CONS_W 255
 #define CONS_H 165
 void make_window8(unsigned char *, int, int, char *, char);
+void make_wtitle8(unsigned char *, int, char *, char);
 void make_textbox8(Sheet *, int, int, int, int, int);
 void set490(FIFO32 *, int);
 void console_task(Sheet *);
