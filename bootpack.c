@@ -140,7 +140,7 @@ void os_main(void){
 				if(i < 256 + 0x80) s[0] = keytable[key_shift!=0][i-256];
 				else s[0] = 0;
 				if('A' <= s[0] && s[0]<='Z'){
-					if(((key_leds&4)==1) == (key_shift!=0)) s[0] += 0x20;
+					if(((key_leds & 4)!=0) == (key_shift!=0)) s[0] += 0x20;
 				}
 				if(s[0] != 0){
 					if(key_to == 0){	// task_A
