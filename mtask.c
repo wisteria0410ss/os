@@ -12,15 +12,19 @@ Task *task_init(MemMan *memman){
         taskctl->tasks0[i].sel = (TASK_GDT0 + i) * 8;
         set_segmdesc(gdt + TASK_GDT0 + i, 103, (int)&taskctl->tasks0[i].tss, AR_TSS32);
     }
+    for(int i=0;i<MAX_TASKLEVELS;i++){
+        taskctl->level[i].runnning = 0;
+        taskctl->level[i].now = 0;
+    }
     task = task_alloc();
     task->flags = 2;
     task->priority = 2;
-    taskctl->runnning = 1;
-    taskctl->now = 0;
-    taskctl->tasks[0] = task;
+    task->level = 0;
+    task_add(task);
+    task_switchsub();
     load_tr(task->sel);
     task_timer = timer_alloc();
-    timer_settime(task_timer, 2);
+    timer_settime(task_timer, task->priority);
 
     return task;
 }
@@ -52,42 +56,88 @@ Task *task_alloc(){
     return 0;
 }
 
-void task_run(Task *task, int priority){
+void task_run(Task *task, int level, int priority){
+    if(level < 0) level = task->level;
     if(priority > 0) task->priority = priority;
+    if(task->flags == 2 && task->level != level) task_remove(task);
     if(task->flags != 2){
-        task->flags = 2;
-        taskctl->tasks[taskctl->runnning] = task;
-        taskctl->runnning++;
+        task->level = level;
+        task_add(task);
     }
+    taskctl->lv_change = 1;
+
     return;
 }
 
 void task_switch(){
-    Task *task;
-    taskctl->now = (taskctl->now + 1) % taskctl->runnning;
-    task = taskctl->tasks[taskctl->now];
-    timer_settime(task_timer, task->priority);
-
-    if(taskctl->runnning >= 2) farjmp(0, task->sel);
+    TaskLevel *tl = &taskctl->level[taskctl->now_lv];
+    Task *new_task, *now_task = tl->tasks[tl->now];
+    tl->now++;
+    if(tl->now == tl->runnning) tl->now = 0;
+    if(taskctl->lv_change != 0){
+        task_switchsub();
+        tl = &taskctl->level[taskctl->now_lv];
+    }
+    new_task = tl->tasks[tl->now];
+    timer_settime(task_timer, new_task->priority);
+    if(new_task != now_task) farjmp(0, new_task->sel);
     
     return;
 }
 
 void task_sleep(Task *task){
-    int i;
-    char ts = 0;
+    Task *now_task;
     if(task->flags == 2){
-        if(task == taskctl->tasks[taskctl->now]) ts = 1;
-        for(i=0;i<taskctl->runnning;i++){
-            if(taskctl->tasks[i] == task) break;
-        }
-        taskctl->runnning--;
-        if(i < taskctl->now) taskctl->now--;
-        for(;i<taskctl->runnning;i++) taskctl->tasks[i] = taskctl->tasks[i+1];
-        task->flags = 1;
-        if(ts != 0){
-            if(taskctl->now >= taskctl->runnning) taskctl->now = 0;
-            farjmp(0, taskctl->tasks[taskctl->now]->sel);
+        now_task = task_now();
+        task_remove(task);
+        if(task == now_task){
+            task_switchsub();
+            now_task = task_now();
+            farjmp(0, now_task->sel);
         }
     }
+    return;
+}
+
+Task *task_now(){
+    TaskLevel *tl = &taskctl->level[taskctl->now_lv];
+    return tl->tasks[tl->now];
+}
+
+void task_add(Task *task){
+    TaskLevel *tl = &taskctl->level[task->level];
+    tl->tasks[tl->runnning] = task;
+    tl->runnning++;
+    task->flags = 2;
+
+    return;
+}
+
+void task_remove(Task *task){
+    int i;
+    TaskLevel *tl = &taskctl->level[task->level];
+
+    for(i=0;i<tl->runnning;i++){
+        if(tl->tasks[i] == task) break;
+    }
+
+    tl->runnning--;
+    if(i < tl->now) tl->now--;
+    if(tl->now >= tl->runnning) tl->now = 0;
+    task->flags = 1;
+
+    for(;i<tl->runnning;i++) tl->tasks[i] = tl->tasks[i+1];
+
+    return;
+}
+
+void task_switchsub(){
+    int i;
+    for(i=0;i<MAX_TASKLEVELS;i++){
+        if(taskctl->level[i].runnning > 0) break;
+    }
+
+    taskctl->now_lv = i;
+    taskctl->lv_change = 0;
+    return;
 }

@@ -43,6 +43,7 @@ void os_main(void){
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
 	task_a = task_init(memman);
 	fifo.task = task_a;
+	task_run(task_a, 1, 0);
 
 	sht_back = sheet_alloc(shtctl);
 	buf_back = (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
@@ -65,7 +66,7 @@ void os_main(void){
 		task_b[i]->tss.fs  = 1*8;
 		task_b[i]->tss.gs  = 1*8;
 		*((int *)(task_b[i]->tss.esp + 4)) = (int)sht_win_b[i];
-		task_run(task_b[i], i+1);
+		task_run(task_b[i], 2, i+1);
 	}
 
 	sht_win = sheet_alloc(shtctl);

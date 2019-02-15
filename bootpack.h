@@ -216,6 +216,8 @@ void inthandler20(int *);
 
 // mtask.c
 #define MAX_TASKS 1000
+#define MAX_TASKS_LV 100
+#define MAX_TASKLEVELS 10
 #define TASK_GDT0 3
 typedef struct{
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
@@ -225,21 +227,30 @@ typedef struct{
 } TSS32;
 typedef struct Task{
 	int sel, flags;
-	int priority;
+	int level, priority;
 	TSS32 tss;
 }Task;
-typedef struct{
+typedef struct TaskLevel{
 	int runnning;
 	int now;
-	Task *tasks[MAX_TASKS];
+	Task *tasks[MAX_TASKS_LV];
+} TaskLevel;
+typedef struct{
+	int now_lv;
+	char lv_change;
+	TaskLevel level[MAX_TASKLEVELS];
 	Task tasks0[MAX_TASKS];
 }TaskCtl;
 extern Timer *task_timer;
 Task *task_init(MemMan *);
 Task *task_alloc(void);
-void task_run(Task *, int);
+void task_run(Task *, int, int);
 void task_switch(void);
 void task_sleep(Task *);
+Task *task_now(void);
+void task_add(Task *);
+void task_remove(Task *);
+void task_switchsub(void);
 
 // hankaku.c
 char *get_fontdata(void);
