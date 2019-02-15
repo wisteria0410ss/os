@@ -2,13 +2,13 @@
 
 void os_main(void){
 	BootInfo *binfo = (BootInfo *)ADR_BOOTINFO;
-	FIFO32 fifo;
+	FIFO32 fifo, keycmd;
 	char s[40];
-	int fifobuf[128];
+	int fifobuf[128], keycmd_buf[32];
 	Timer *timer;
 	int mx, my;
 	int cursor_x, cursor_c;
-	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7;
+	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	unsigned int memtotal;
 	static char keytable[2][0x80] = {{
 		0,	0,	'1','2','3','4','5','6','7','8','9','0','-','^',0,	0,	
@@ -42,6 +42,7 @@ void os_main(void){
 	io_sti();
 
 	fifo32_init(&fifo, 128, fifobuf, 0);
+	fifo32_init(&keycmd, 32, keycmd_buf, 0);
 	init_pit();
 	
 	init_keyboard(&fifo, 256);
@@ -117,7 +118,15 @@ void os_main(void){
 	putfonts8_asc(buf_back, binfo->scrnx, binfo->scrnx-8*12-1, binfo->scrny-47, COL8_FFFFFF, "Haribote OS.");
 	sheet_refresh(sht_back, binfo->scrnx-8*12-1, binfo->scrny-47, binfo->scrnx, binfo->scrny);
 
+	fifo32_push(&keycmd, KEYCMD_LED);
+	fifo32_push(&keycmd, key_leds);
+
 	while(1){
+		if(fifo32_status(&keycmd) > 0 && keycmd_wait < 0){
+			keycmd_wait = fifo32_pop(&keycmd);
+			wait_KBC_sendready();
+			io_out8(PORT_KEYDAT, keycmd_wait);
+		}
 		io_cli();
 		if(fifo32_status(&fifo) == 0){
 			task_sleep(task_a);
@@ -171,6 +180,27 @@ void os_main(void){
 				if(i == 256 + 0x36) key_shift |= 2;
 				if(i == 256 + 0xaa) key_shift &= ~1;
 				if(i == 256 + 0xb6) key_shift &= ~2;
+				if(i == 256 + 0x3a){
+					key_leds ^= 4;
+					fifo32_push(&keycmd, KEYCMD_LED);
+					fifo32_push(&keycmd, key_leds);
+				}
+				if(i == 256 + 0x45){
+					key_leds ^= 2;
+					fifo32_push(&keycmd, KEYCMD_LED);
+					fifo32_push(&keycmd, key_leds);
+				}
+				if(i == 256 + 0x46){
+					key_leds ^= 1;
+					fifo32_push(&keycmd, KEYCMD_LED);
+					fifo32_push(&keycmd, key_leds);
+				}
+				if(i == 256 + 0xfa) keycmd_wait = -1;
+				if(i == 256 + 0xfe){
+					wait_KBC_sendready();
+					io_out8(PORT_KEYDAT, keycmd_wait);
+				}
+				
 				boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43);
 				sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
 			}else if(512 <= i && i < 768){

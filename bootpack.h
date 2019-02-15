@@ -260,6 +260,7 @@ char *get_fontdata(void);
 // bootpack.c
 #define CONS_W 255
 #define CONS_H 165
+#define KEYCMD_LED 0xed
 void make_window8(unsigned char *, int, int, char *, char);
 void make_wtitle8(unsigned char *, int, char *, char);
 void make_textbox8(Sheet *, int, int, int, int, int);
