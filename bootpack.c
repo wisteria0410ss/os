@@ -388,12 +388,23 @@ void console_task(Sheet *sheet){
 						cursor_x -= 8;
 					}
 				}else if(i == 10 + 256){	// enter
-					if(cursor_y + 32 < CONS_H - 8){
-						putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
-						cursor_y += 16;
-						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
-						cursor_x = 16;
+					putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
+					if(cursor_y + 32 < CONS_H - 8) cursor_y += 16;
+					else{
+						for(int y=28;y<CONS_H-24;y++){
+							for(int x=8;x<=CONS_W-8;x++){
+								sheet->buf[x + y*sheet->bxsize] = sheet->buf[x + (y+16)*sheet->bxsize];
+							}
+						}
+						for(int y=CONS_H-24;y<CONS_H-8;y++){
+							for(int x=8;x<=CONS_W-8;x++){
+								sheet->buf[x + y*sheet->bxsize] = COL8_000000;
+							}
+						}
+						sheet_refresh(sheet, 8, 28, CONS_W-7, CONS_H-9);
 					}
+					putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
+					cursor_x = 16;
 				}else{
 					if(cursor_x < CONS_W - 16){
 						s[0] = i-256;
