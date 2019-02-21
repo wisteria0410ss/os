@@ -438,11 +438,29 @@ void console_task(Sheet *sheet, unsigned int memtotal){
 							for(x=0;x<y;x++){
 								s[0] = p[x];
 								s[1] = 0;
-								putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
-								cursor_x += 8;
-								if(cursor_x >= CONS_W-8){
+								if(s[0] == 0x09){
+									// tab
+									do{
+										putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
+										cursor_x += 8;
+										if(cursor_x >= CONS_W-8){
+											cursor_x = 8;
+											cursor_y = cons_newline(cursor_y, sheet);
+										}
+									}while(((cursor_x-8) & 0x1f) != 0);
+								}else if(s[0] == 0x0a){
+									// lf
 									cursor_x = 8;
 									cursor_y = cons_newline(cursor_y, sheet);
+								}else if(s[0] == 0x0d){
+									// cr
+								}else{
+									putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
+									cursor_x += 8;
+									if(cursor_x >= CONS_W-8){
+										cursor_x = 8;
+										cursor_y = cons_newline(cursor_y, sheet);
+									}
 								}
 							}
 						}else{
