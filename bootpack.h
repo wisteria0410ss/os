@@ -5,6 +5,7 @@ typedef struct{
 	char *vram;
 } BootInfo;
 #define ADR_BOOTINFO 0x00000ff0
+#define ADR_DISKIMG  0x00100000
 
 // func.asm
 extern void io_hlt(void);
@@ -261,6 +262,13 @@ void task_idle(void);
 char *get_fontdata(void);
 
 // bootpack.c
+typedef struct{
+	unsigned char name[8], ext[3], type;
+	char reserve[10];
+	unsigned short time, date, clustno;
+	unsigned int size;
+} FileInfo;
+
 #define CONS_W 255
 #define CONS_H 165
 #define KEYCMD_LED 0xed

@@ -337,6 +337,7 @@ void console_task(Sheet *sheet, unsigned int memtotal){
 	int i, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
 	char s[30], cmdline[30];
 	MemMan *memman = (MemMan *)MEMMAN_ADDR;
+	FileInfo *finfo = (FileInfo *)(ADR_DISKIMG + 0x002600);
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
 	timer = timer_alloc();
@@ -387,6 +388,26 @@ void console_task(Sheet *sheet, unsigned int memtotal){
 						len = msprintf(s, "Free   %d kiB", memman_total(memman) / 1024);
 						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, len);
 						cursor_y = cons_newline(cursor_y, sheet);
+						cursor_y = cons_newline(cursor_y, sheet);
+					}else if(strcmp(cmdline, "clear") == 0){
+						for(int y=28;y<CONS_H-8;y++){
+							for(int x=8;x<CONS_W-7;x++){
+								sheet->buf[x + y*sheet->bxsize] = COL8_000000;
+							}
+						}
+						sheet_refresh(sheet, 8, 28, CONS_W-7, CONS_H-8);
+						cursor_y = 28;
+					}else if(strcmp(cmdline, "dir") == 0){
+						for(int x=0;x<224;x++){
+							if(finfo[x].name[0] == 0x00) break;
+							if(finfo[x].name[0] != 0xe5){
+								if((finfo[x].type & 0x18) == 0){
+									int len = msprintf(s, "%.8s.%.3s  %d", finfo[x].name, finfo[x].ext, finfo[x].size);
+									putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, len);
+									cursor_y = cons_newline(cursor_y, sheet);
+								}
+							}
+						}
 						cursor_y = cons_newline(cursor_y, sheet);
 					}else if(cmdline[0] != 0){
 						int len;
