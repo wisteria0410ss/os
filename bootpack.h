@@ -164,6 +164,7 @@ void init_keyboard(FIFO32 *, int);
 #define PORT_KEYCMD		0x0064
 #define KEYSTA_SEND_NOTREADY	0x02
 #define KEYCMD_WRITE_MODE		0x60
+#define KEYCMD_LED				0xed
 #define KBC_MODE		0x47
 
 // mouse.c
@@ -262,22 +263,25 @@ void task_idle(void);
 // hankaku.c
 char *get_fontdata(void);
 
-// bootpack.c
+// window.c
+void make_window8(unsigned char *, int, int, char *, char);
+void make_wtitle8(unsigned char *, int, char *, char);
+void make_textbox8(Sheet *, int, int, int, int, int);
+
+// console.c
+#define CONS_W 255
+#define CONS_H 165
+void console_task(Sheet *, unsigned int);
+int cons_newline(int, Sheet *);
+
+// file.c
 typedef struct{
 	unsigned char name[8], ext[3], type;
 	char reserve[10];
 	unsigned short time, date, clustno;
 	unsigned int size;
 } FileInfo;
-
-#define CONS_W 255
-#define CONS_H 165
-#define KEYCMD_LED 0xed
-void make_window8(unsigned char *, int, int, char *, char);
-void make_wtitle8(unsigned char *, int, char *, char);
-void make_textbox8(Sheet *, int, int, int, int, int);
-void set490(FIFO32 *, int);
-void console_task(Sheet *, unsigned int);
-int cons_newline(int, Sheet *);
 void file_readfat(int *, unsigned char *);
 void file_loadfile(int, int, char *, int *, char *);
+
+// bootpack.c

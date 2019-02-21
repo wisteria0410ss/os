@@ -1,14 +1,13 @@
+.PHONY: img run run-noframe run-vbox clean
+
+OBJS := $(patsubst %.c,%.o,$(filter-out makefont.c hankaku.c test.c,$(wildcard *.c))) hankaku.o func.o
+FILES := strcmp.c ipl.asm fifo.c
+
 default:
 	make img
 
-ipl.bin: ipl.asm Makefile
-	nasm ipl.asm -o ipl.bin -l ipl.lst
-
-asmhead.bin: asmhead.asm Makefile
-	nasm asmhead.asm -o asmhead.bin -l asmhead.lst
-
-func.o: func.asm Makefile
-	nasm -felf func.asm -o func.o -l func.lst
+%.bin: %.asm Makefile
+	nasm $< -o $@ -l $(*F).lst
 
 makefont.out: makefont.c
 	gcc makefont.c -o makefont.out
@@ -16,18 +15,22 @@ makefont.out: makefont.c
 hankaku.c: makefont.out hankaku.txt
 	./makefont.out > hankaku.c
 
-bootpack.hrb: bootpack.c bootpack.h graphic.c dsctbl.c int.c keyboard.c mouse.c fifo.c memory.c sheet.c timer.c mtask.c har.lds sprintf.c strcmp.c hankaku.c func.o Makefile
-	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -T har.lds bootpack.c graphic.c dsctbl.c int.c keyboard.c mouse.c fifo.c memory.c sheet.c timer.c mtask.c sprintf.c strcmp.c hankaku.c func.o -o bootpack.hrb
+func.o: func.asm Makefile
+	nasm -felf func.asm -o func.o -l func.lst
+
+%.o: %.c bootpack.h Makefile
+	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -c $< -o $@
+
+bootpack.hrb: $(OBJS) har.lds Makefile
+	gcc -march=i486 -m32 -nostdlib -T har.lds $(OBJS) -o bootpack.hrb
 	
 haribote.sys: asmhead.bin bootpack.hrb Makefile
 	cat asmhead.bin bootpack.hrb > haribote.sys
 
-haribote.img: ipl.bin haribote.sys strcmp.c ipl.asm fifo.c Makefile
+haribote.img: ipl.bin haribote.sys $(FILES) Makefile
 	mformat -f 1440 -B ipl.bin -C -i haribote.img ::
 	mcopy haribote.sys -i haribote.img ::
-	mcopy strcmp.c -i haribote.img ::
-	mcopy ipl.asm -i haribote.img ::
-	mcopy fifo.c -i haribote.img ::
+	mcopy $(FILES) -i haribote.img ::
 
 img: haribote.img
 
