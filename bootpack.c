@@ -72,7 +72,7 @@ void os_main(void){
 	make_window8(buf_cons, CONS_W, CONS_H, "console", 0);
 	make_textbox8(sht_cons, 8, 28, CONS_W-16, CONS_H-37, COL8_000000);
 	task_cons = task_alloc();
-	task_cons->tss.esp = memman_alloc_4k(memman, 64*1024) + 64*1024 - 8;
+	task_cons->tss.esp = memman_alloc_4k(memman, 64*1024) + 64*1024 - 12;
 	task_cons->tss.eip = (int)&console_task;
 	task_cons->tss.es  = 1*8;
 	task_cons->tss.cs  = 2*8;
@@ -81,6 +81,7 @@ void os_main(void){
 	task_cons->tss.fs  = 1*8;
 	task_cons->tss.gs  = 1*8;
 	*((int *)(task_cons->tss.esp + 4)) = (int)sht_cons;
+	*((int *)(task_cons->tss.esp + 8)) = memtotal;
 	task_run(task_cons, 2, 2);
 
 	sht_win = sheet_alloc(shtctl);
@@ -109,11 +110,6 @@ void os_main(void){
 	sheet_updown(sht_win, 2);
 	sheet_updown(sht_mouse, 3);
 
-	msprintf(s, "(%4d, %4d)", mx, my);
-	putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 12);
-	int s_len = 0;
-	msprintf(s, "memory %d MiB,   free: %d kiB%n", memtotal / (1024*1024), memman_total(memman) / 1024, &s_len);
-	putfonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, s_len);
 	putfonts8_asc(buf_back, binfo->scrnx, binfo->scrnx-8*12, binfo->scrny-46, COL8_000000, "Haribote OS.");
 	putfonts8_asc(buf_back, binfo->scrnx, binfo->scrnx-8*12-1, binfo->scrny-47, COL8_FFFFFF, "Haribote OS.");
 	sheet_refresh(sht_back, binfo->scrnx-8*12-1, binfo->scrny-47, binfo->scrnx, binfo->scrny);
@@ -135,8 +131,6 @@ void os_main(void){
 			int i = fifo32_pop(&fifo);
 			io_sti();
 			if(256 <= i && i < 512){
-				msprintf(s, "%02X", i - 256);
-				putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
 				if(i < 256 + 0x80) s[0] = keytable[key_shift!=0][i-256];
 				else s[0] = 0;
 				if('A' <= s[0] && s[0]<='Z'){
@@ -215,20 +209,12 @@ void os_main(void){
 				sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);
 			}else if(512 <= i && i < 768){
 				if(mouse_decode(&mdec, i - 512) != 0){
-					msprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
-					if(mdec.btn & 0x01) s[1] = 'L';
-					if(mdec.btn & 0x02) s[3] = 'R';
-					if(mdec.btn & 0x04) s[2] = 'C';
-					putfonts8_asc_sht(sht_back, 32, 16, COL8_FFFFFF, COL8_008484, s, 15);
-
 					mx += mdec.x;
 					my += mdec.y;
 					if(mx < 0) mx = 0;
 					if(my < 0) my = 0;
 					if(mx > binfo->scrnx-1) mx = binfo->scrnx - 1;
 					if(my > binfo->scrny-1) my = binfo->scrny - 1;
-					msprintf(s, "(%4d, %4d)", mx, my);
-					putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 12);
 					sheet_slide(sht_mouse, mx, my);	// refreshを含む
 					if((mdec.btn & 0x01) != 0)sheet_slide(sht_win, mx-80, my-8);
 				}
@@ -344,12 +330,13 @@ void set490(FIFO32 *fifo, int mode){
 	return;
 }
 
-void console_task(Sheet *sheet){
+void console_task(Sheet *sheet, unsigned int memtotal){
 	Timer *timer;
 	Task *task = task_now();
 
 	int i, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
-	char s[2];
+	char s[30], cmdline[30];
+	MemMan *memman = (MemMan *)MEMMAN_ADDR;
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
 	timer = timer_alloc();
@@ -389,26 +376,33 @@ void console_task(Sheet *sheet){
 					}
 				}else if(i == 10 + 256){	// enter
 					putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
-					if(cursor_y + 32 < CONS_H - 8) cursor_y += 16;
-					else{
-						for(int y=28;y<CONS_H-24;y++){
-							for(int x=8;x<=CONS_W-8;x++){
-								sheet->buf[x + y*sheet->bxsize] = sheet->buf[x + (y+16)*sheet->bxsize];
-							}
-						}
-						for(int y=CONS_H-24;y<CONS_H-8;y++){
-							for(int x=8;x<=CONS_W-8;x++){
-								sheet->buf[x + y*sheet->bxsize] = COL8_000000;
-							}
-						}
-						sheet_refresh(sheet, 8, 28, CONS_W-7, CONS_H-9);
+					cmdline[cursor_x/8 - 2] = 0;
+					cursor_y = cons_newline(cursor_y, sheet);
+					if(strcmp(cmdline, "mem") == 0){
+						// mem コマンド
+						int len;
+						len = msprintf(s, "Total  %d MiB", memtotal / (1024*1024));
+						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, len);
+						cursor_y = cons_newline(cursor_y, sheet);
+						len = msprintf(s, "Free   %d kiB", memman_total(memman) / 1024);
+						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, len);
+						cursor_y = cons_newline(cursor_y, sheet);
+						cursor_y = cons_newline(cursor_y, sheet);
+					}else if(cmdline[0] != 0){
+						int len;
+						len = msprintf(s, "command \'%s\' not found.", cmdline);
+						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, len);
+						cursor_y = cons_newline(cursor_y, sheet);
+						cursor_y = cons_newline(cursor_y, sheet);
 					}
+
 					putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">", 1);
 					cursor_x = 16;
 				}else{
 					if(cursor_x < CONS_W - 16){
 						s[0] = i-256;
 						s[1] = 0;
+						cmdline[cursor_x/8 - 2] = i-256;
 						putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
 						cursor_x += 8;
 					}
@@ -418,4 +412,23 @@ void console_task(Sheet *sheet){
 			sheet_refresh(sheet, cursor_x, cursor_y, cursor_x + 8, cursor_y + 16);
 		}
 	}
+}
+
+int cons_newline(int cursor_y, Sheet *sheet){
+	if(cursor_y + 32 < CONS_H - 8) cursor_y += 16;
+	else{
+		for(int y=28;y<CONS_H-24;y++){
+			for(int x=8;x<=CONS_W-8;x++){
+				sheet->buf[x + y*sheet->bxsize] = sheet->buf[x + (y+16)*sheet->bxsize];
+			}
+		}
+		for(int y=CONS_H-24;y<CONS_H-8;y++){
+			for(int x=8;x<=CONS_W-8;x++){
+				sheet->buf[x + y*sheet->bxsize] = COL8_000000;
+			}
+		}
+		sheet_refresh(sheet, 8, 28, CONS_W-7, CONS_H-9);
+	}
+
+	return cursor_y;
 }

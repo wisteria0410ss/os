@@ -265,7 +265,7 @@ int msprintf(char *s, const char *fmt, ...){
                     str = va_arg(ap, char *);
                     cnt = 0;
                     char t[256];
-                    for(;*str='\0';str++){
+                    for(;*str!=0 && *str!='\0';str++){
                         t[cnt]=*str;   
                         cnt++;
                     }

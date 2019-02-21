@@ -105,6 +105,9 @@ void putfonts8_asc_sht(Sheet *, int, int, int, int, char *, int);
 // sprintf.c
 int msprintf(char*, const char*, ...);
 
+// strcmp.c
+int strcmp(const char *, const char *);
+
 // dsctbl.c
 typedef struct{
 	short limit_low, base_low;
@@ -265,4 +268,5 @@ void make_window8(unsigned char *, int, int, char *, char);
 void make_wtitle8(unsigned char *, int, char *, char);
 void make_textbox8(Sheet *, int, int, int, int, int);
 void set490(FIFO32 *, int);
-void console_task(Sheet *);
+void console_task(Sheet *, unsigned int);
+int cons_newline(int, Sheet *);
