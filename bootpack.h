@@ -108,6 +108,7 @@ int msprintf(char*, const char*, ...);
 
 // strcmp.c
 int strcmp(const char *, const char *);
+int starts_with(const char *, const char *);
 
 // dsctbl.c
 typedef struct{
