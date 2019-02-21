@@ -1,36 +1,35 @@
 .PHONY: img run run-noframe run-vbox clean
 
-OBJS := $(patsubst %.c,%.o,$(filter-out makefont.c hankaku.c test.c,$(wildcard *.c))) hankaku.o func.o
-FILES := strcmp.c ipl.asm fifo.c
+OBJS := $(patsubst src/%.c,obj/%.o,$(filter-out src/hankaku.c src/test.c,$(wildcard src/*.c))) obj/hankaku.o obj/func.o
+FILES := src/strcmp.c src/ipl.asm src/fifo.c
 
 default:
 	make img
 
-%.bin: %.asm Makefile
-	nasm $< -o $@ -l $(*F).lst
+bin/%.bin: src/%.asm Makefile
+	nasm $< -o $@ -l lst/$(*F).lst
 
-makefont.out: makefont.c
-	gcc makefont.c -o makefont.out
+util/makefont.out: util/makefont.c
+	gcc $< -o $@
 
-hankaku.c: makefont.out hankaku.txt
-	./makefont.out > hankaku.c
+src/hankaku.c: util/makefont.out src/hankaku.txt
+	util/makefont.out src/hankaku.txt > src/hankaku.c
 
-func.o: func.asm Makefile
-	nasm -felf func.asm -o func.o -l func.lst
+obj/func.o: src/func.asm Makefile
+	nasm -felf $< -o $@ -l lst/$(*F).lst
 
-%.o: %.c bootpack.h Makefile
+obj/%.o: src/%.c src/bootpack.h Makefile
 	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -c $< -o $@
 
-bootpack.hrb: $(OBJS) har.lds Makefile
-	gcc -march=i486 -m32 -nostdlib -T har.lds $(OBJS) -o bootpack.hrb
+bin/bootpack.hrb: $(OBJS) src/har.lds Makefile
+	gcc -march=i486 -m32 -nostdlib -T src/har.lds $(OBJS) -o $@
 	
-haribote.sys: asmhead.bin bootpack.hrb Makefile
-	cat asmhead.bin bootpack.hrb > haribote.sys
+bin/haribote.sys: bin/asmhead.bin bin/bootpack.hrb Makefile
+	cat bin/asmhead.bin bin/bootpack.hrb > $@
 
-haribote.img: ipl.bin haribote.sys $(FILES) Makefile
-	mformat -f 1440 -B ipl.bin -C -i haribote.img ::
-	mcopy haribote.sys -i haribote.img ::
-	mcopy $(FILES) -i haribote.img ::
+haribote.img: bin/ipl.bin bin/haribote.sys $(FILES) Makefile
+	mformat -f 1440 -B bin/ipl.bin -C -i haribote.img ::
+	mcopy bin/haribote.sys $(FILES) -i haribote.img ::
 
 img: haribote.img
 
@@ -44,4 +43,4 @@ run-noframe: haribote.img
 	qemu-system-i386 -m 32 -no-frame -drive file=haribote.img,format=raw,if=floppy -enable-kvm
 
 clean:
-	rm *.bin *.sys *.lst *.img *.hrb *.o *.out hankaku.c
+	-rm bin/*.bin bin/*.sys lst/*.lst *.img bin/*.hrb obj/*.o util/*.out src/hankaku.c

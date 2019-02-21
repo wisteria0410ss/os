@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-int main(){
-    FILE *fp = fopen("hankaku.txt", "r");
+int main(int argc, char **argv){
+    FILE *fp = fopen(argv[1], "r");
     if(fp==NULL){
         fprintf(stderr, "load error.\n");
         return 1;
