@@ -279,3 +279,5 @@ void make_textbox8(Sheet *, int, int, int, int, int);
 void set490(FIFO32 *, int);
 void console_task(Sheet *, unsigned int);
 int cons_newline(int, Sheet *);
+void file_readfat(int *, unsigned char *);
+void file_loadfile(int, int, char *, int *, char *);

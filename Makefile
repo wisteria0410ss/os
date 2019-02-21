@@ -22,11 +22,12 @@ bootpack.hrb: bootpack.c bootpack.h graphic.c dsctbl.c int.c keyboard.c mouse.c 
 haribote.sys: asmhead.bin bootpack.hrb Makefile
 	cat asmhead.bin bootpack.hrb > haribote.sys
 
-haribote.img: ipl.bin haribote.sys strcmp.c ipl.asm Makefile
+haribote.img: ipl.bin haribote.sys strcmp.c ipl.asm fifo.c Makefile
 	mformat -f 1440 -B ipl.bin -C -i haribote.img ::
 	mcopy haribote.sys -i haribote.img ::
 	mcopy strcmp.c -i haribote.img ::
 	mcopy ipl.asm -i haribote.img ::
+	mcopy fifo.c -i haribote.img ::
 
 img: haribote.img
 
