@@ -8,7 +8,8 @@ section .text
     global load_cr0, store_cr0
     global load_tr, farjmp
     global memtest_sub
-    extern inthandler20, inthandler21, inthandler27, inthandler2c
+    global asm_cons_putchar
+    extern inthandler20, inthandler21, inthandler27, inthandler2c, cons_putchar
 
 io_hlt:         ; void io_hlt()
     hlt
@@ -199,3 +200,11 @@ farjmp:     ; void farjmp(int, int);
     jmp     far [esp+4]
     ret
     
+asm_cons_putchar:
+    push    1
+    and     eax, 0xff
+    push    eax
+    push    dword [0x0fec]
+    call    cons_putchar
+    add     esp, 12
+    ret
