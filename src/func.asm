@@ -6,7 +6,7 @@ section .text
     global load_gdtr, load_idtr
     global asm_inthandler20, asm_inthandler21, asm_inthandler27, asm_inthandler2c
     global load_cr0, store_cr0
-    global load_tr, farjmp
+    global load_tr, farjmp, farcall
     global memtest_sub
     global asm_cons_putchar
     extern inthandler20, inthandler21, inthandler27, inthandler2c, cons_putchar
@@ -198,6 +198,10 @@ load_tr:    ; void load_tr(int);
 
 farjmp:     ; void farjmp(int, int);
     jmp     far [esp+4]
+    ret
+
+farcall:    ;void farcall(int, int);
+    call    far [esp+4]
     ret
     
 asm_cons_putchar:

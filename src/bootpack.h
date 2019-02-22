@@ -31,6 +31,7 @@ extern void asm_inthandler2c(void);
 extern unsigned int memtest_sub(unsigned int, unsigned int);
 extern void load_tr(int);
 extern void farjmp(int, int);
+extern void farcall(int, int);
 
 // memory.c
 #define MEMMAN_FREES	4090

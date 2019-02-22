@@ -22,13 +22,14 @@ obj/%.o: src/%.c src/bootpack.h Makefile
 	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -c $< -o $@
 
 bin/bootpack.hrb: $(OBJS) src/har.lds Makefile
-	gcc -march=i486 -m32 -nostdlib -T src/har.lds $(OBJS) -Xlinker -Map -Xlinker lst/bootpack.map -o $@
-	
+	ld -o $@ $(OBJS) -e os_main -Map lst/bootpack.map -m elf_i386 -T src/har.lds
+	#gcc -march=i486 -m32 -nostdlib -T src/har.lds $(OBJS) -Xlinker -Map -Xlinker lst/bootpack.map -o $@
+
 bin/haribote.sys: bin/asmhead.bin bin/bootpack.hrb Makefile
 	cat bin/asmhead.bin bin/bootpack.hrb > $@
 
 bin/hlt.hrb: app/hlt.asm Makefile
-	nasm $< -o $@
+	nasm $< -o $@ -l lst/hlt.lst
 
 haribote.img: bin/ipl.bin bin/haribote.sys $(FILES) Makefile
 	mformat -f 1440 -B bin/ipl.bin -C -i haribote.img ::
@@ -46,4 +47,4 @@ run-noframe: haribote.img
 	qemu-system-i386 -m 32 -no-frame -drive file=haribote.img,format=raw,if=floppy -enable-kvm
 
 clean:
-	-rm bin/*.bin bin/*.sys lst/*.lst *.img bin/*.hrb obj/*.o util/*.out src/hankaku.c
+	-rm bin/*.bin bin/*.sys lst/* *.img bin/*.hrb obj/*.o util/*.out src/hankaku.c
