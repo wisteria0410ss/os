@@ -9,10 +9,10 @@ default:
 bin/%.bin: src/%.asm Makefile
 	nasm $< -o $@ -l lst/$(*F).lst
 
-util/makefont.out: util/makefont.c
+util/makefont.out: util/makefont.c Makefile
 	gcc $< -o $@
 
-src/hankaku.c: util/makefont.out src/hankaku.txt
+src/hankaku.c: util/makefont.out src/hankaku.txt Makefile
 	util/makefont.out src/hankaku.txt > src/hankaku.c
 
 obj/func.o: src/func.asm Makefile
