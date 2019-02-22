@@ -269,10 +269,21 @@ void make_wtitle8(unsigned char *, int, char *, char);
 void make_textbox8(Sheet *, int, int, int, int, int);
 
 // console.c
+typedef struct{
+	Sheet *sht;
+	int cur_x, cur_y, cur_c;
+} Console;
 #define CONS_W 960
-#define CONS_H 480
+#define CONS_H 640
 void console_task(Sheet *, unsigned int);
-int cons_newline(int, Sheet *);
+void cons_putchar(Console *, int, char);
+void cons_newline(Console *);
+void cons_runcmd(char *, Console *, int *, unsigned int);
+void cmd_mem(Console *, unsigned int);
+void cmd_cls(Console *);
+void cmd_dir(Console *);
+void cmd_type(Console *, int *, char *);
+void cmd_hlt(Console *, int *);
 
 // file.c
 typedef struct{
@@ -283,5 +294,6 @@ typedef struct{
 } FileInfo;
 void file_readfat(int *, unsigned char *);
 void file_loadfile(int, int, char *, int *, char *);
+FileInfo *file_search(char *, FileInfo *, int);
 
 // bootpack.c
