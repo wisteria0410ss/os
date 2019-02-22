@@ -125,14 +125,15 @@ void cons_runcmd(char *cmdline, Console *cons, int *fat, unsigned int memtotal){
 	else if(strcmp(cmdline, "cls") == 0) cmd_cls(cons);
 	else if(strcmp(cmdline, "dir") == 0) cmd_dir(cons);
 	else if(starts_with(cmdline, "type ") || strcmp(cmdline, "type") == 0) cmd_type(cons, fat, cmdline);
-	else if(strcmp(cmdline, "hlt") == 0) cmd_hlt(cons, fat);
 	else if(cmdline[0] != 0){
-		int len;
-		char s[256];
-		len = msprintf(s, "command \'%s\' not found.", cmdline);
-		putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, len);
-		cons_newline(cons);
-		cons_newline(cons);
+		if(cmd_app(cons, fat, cmdline) == 0){
+			int len;
+			char s[256];
+			len = msprintf(s, "command \'%s\' not found.", cmdline);
+			putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, len);
+			cons_newline(cons);
+			cons_newline(cons);
+		}
 	}
 	return;
 }
@@ -198,21 +199,32 @@ void cmd_type(Console *cons, int *fat, char *cmdline){
 	return;
 }
 
-void cmd_hlt(Console *cons, int *fat){
+int cmd_app(Console *cons, int *fat, char *cmdline){
 	MemMan *memman = (MemMan *)MEMMAN_ADDR;
-	FileInfo *finfo = file_search("HLT.HRB", (FileInfo *)(ADR_DISKIMG + 0x002600), 224);
+	FileInfo *finfo;
 	SegmentDescriptor *gdt = (SegmentDescriptor *)ADR_GDT;
+	char name[18], *p;
+	int i;
 
+	for(i=0;i<13;i++){
+		if(cmdline[i] <= ' ') break;
+		name[i] = cmdline[i];
+	}
+	name[i] = 0;
+
+	finfo = file_search(name, (FileInfo *)(ADR_DISKIMG + 0x002600), 224);
+	if(finfo == 0 && name[i-1]!='.'){
+		msprintf(name, "%s.HRB", name);
+		finfo = file_search(name, (FileInfo *)(ADR_DISKIMG + 0x002600), 224);
+	}
 	if(finfo != 0){
-		char *p = (char *)memman_alloc_4k(memman, finfo->size);
+		p = (char *)memman_alloc_4k(memman, finfo->size);
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
 		set_segmdesc(gdt+1003, finfo->size-1, (int)p, AR_CODE32_ER);
 		farcall(0, 1003*8);
 		memman_free_4k(memman, (int)p, finfo->size);
-	}else{
-		putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "File not found.", 15);
 		cons_newline(cons);
+		return 1;
 	}
-	cons_newline(cons);
-	return;
+	return 0;
 }
