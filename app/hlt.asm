@@ -1,5 +1,5 @@
     mov     al, 'A'
-    call    0x5094
+    call    2*8:0x5094
 fin:
     hlt
     jmp     fin
