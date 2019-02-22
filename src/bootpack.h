@@ -269,8 +269,8 @@ void make_wtitle8(unsigned char *, int, char *, char);
 void make_textbox8(Sheet *, int, int, int, int, int);
 
 // console.c
-#define CONS_W 255
-#define CONS_H 165
+#define CONS_W 960
+#define CONS_H 480
 void console_task(Sheet *, unsigned int);
 int cons_newline(int, Sheet *);
 

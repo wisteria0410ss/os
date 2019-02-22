@@ -8,7 +8,8 @@ vmode   equ 0x0ff2          ; 色数
 scrnx   equ 0x0ff4          ; X解像度
 scrny   equ 0x0ff6          ; Y解像度
 vram    equ 0x0ff8          ; グラフィックバッファの開始番地
-vbemode equ 893           ; 画面モード
+mode_h  equ 893             ; 画面モード(1920x1080)
+mode_m  equ 0x105           ; 画面モード(1024x768)
 
     org     0xc200
 
@@ -26,7 +27,33 @@ vbemode equ 893           ; 画面モード
                             ; 画面モード情報取得
                             ; es:di ...受け取る番地(そのまま)
     mov     ax, 0x4f01      ; ax    ...0x4f01で画面モード情報取得
-    mov     cx, vbemode     ; cx    ...画面モード
+    mov     cx, mode_h      ; cx    ...画面モード
+    int     0x10            ; ビデオBIOS呼出
+    cmp     ax, 0x004f      ; 呼出成功かつVESAサポートありか
+    jne     scrn1024        ; だめなら中解像度
+
+    cmp     byte [es:di+0x19], 8    ; 色数が8か
+    jne     scrn1024
+    cmp     byte [es:di+0x1b], 4    ; パレットモードか
+    jne     scrn1024
+    mov     ax, [es:di+0x00]
+    and     ax, 0x0080
+    jz      scrn1024
+
+    mov     bx, mode_h+0x4000
+    mov     ax, 0x4f02      ; 画面モード切替
+    int     0x10            ; ビデオBIOS呼出
+    mov     byte [vmode], 8 ; 色情報, 8であることは保証されている
+    mov     ax, [es:di+0x12]    ; X解像度   ...オフセット0x12, word
+    mov     word [scrnx], ax
+    mov     ax, [es:di+0x14]    ; Y解像度   ...オフセット0x14, word
+    mov     word [scrny], ax
+    mov     dword eax, [es:di+0x28] ; vramベース...オフセット0x28, dword
+    mov     dword [vram], eax
+    jmp     key_status
+scrn1024:
+    mov     ax, 0x4f01      ; ax    ...0x4f01で画面モード情報取得
+    mov     cx, mode_m      ; cx    ...画面モード
     int     0x10            ; ビデオBIOS呼出
     cmp     ax, 0x004f      ; 呼出成功かつVESAサポートありか
     jne     scrn320         ; だめなら低解像度
@@ -39,7 +66,7 @@ vbemode equ 893           ; 画面モード
     and     ax, 0x0080
     jz      scrn320
 
-    mov     bx, vbemode+0x4000
+    mov     bx, mode_m+0x4000
     mov     ax, 0x4f02      ; 画面モード切替
     int     0x10            ; ビデオBIOS呼出
     mov     byte [vmode], 8 ; 色情報, 8であることは保証されている
