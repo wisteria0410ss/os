@@ -1,7 +1,7 @@
 .PHONY: img run run-noframe run-vbox clean
 
 OBJS := $(patsubst src/%.c,obj/%.o,$(filter-out src/hankaku.c src/test.c,$(wildcard src/*.c))) obj/hankaku.o obj/func.o
-FILES := src/strcmp.c src/ipl.asm src/fifo.c
+FILES := src/strcmp.c src/ipl.asm src/fifo.c bin/hlt.hrb
 
 default:
 	make img
@@ -26,6 +26,9 @@ bin/bootpack.hrb: $(OBJS) src/har.lds Makefile
 	
 bin/haribote.sys: bin/asmhead.bin bin/bootpack.hrb Makefile
 	cat bin/asmhead.bin bin/bootpack.hrb > $@
+
+bin/hlt.hrb: app/hlt.asm Makefile
+	nasm $< -o $@
 
 haribote.img: bin/ipl.bin bin/haribote.sys $(FILES) Makefile
 	mformat -f 1440 -B bin/ipl.bin -C -i haribote.img ::
