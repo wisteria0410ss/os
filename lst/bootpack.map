@@ -62,12 +62,12 @@ LOAD obj/func.o
                 0x0000000000000008        0x4 LONG 0x0
                 0x000000000000000c        0x4 LONG 0x310000
                 0x0000000000000010        0x4 LONG 0x146c SIZEOF (.data)
-                0x0000000000000014        0x4 LONG 0x5111 LOADADDR (.data)
+                0x0000000000000014        0x4 LONG 0x5113 LOADADDR (.data)
                 0x0000000000000018        0x4 LONG 0xe9000000
                 0x000000000000001c        0x4 LONG 0x3bcc (os_main - 0x20)
                 0x0000000000000020        0x4 LONG 0x0
 
-.text           0x0000000000000030     0x50e1
+.text           0x0000000000000030     0x50e3
  *(.text)
  .text          0x0000000000000030      0x710 obj/mtask.o
                 0x0000000000000030                task_init
@@ -167,7 +167,7 @@ LOAD obj/func.o
                 0x0000000000004f15                inthandler20
  .text          0x0000000000004fc6        0xa obj/hankaku.o
                 0x0000000000004fc6                get_fontdata
- .text          0x0000000000004fd0      0x141 obj/func.o
+ .text          0x0000000000004fd0      0x143 obj/func.o
                 0x0000000000004fd0                io_hlt
                 0x0000000000004fd2                io_cli
                 0x0000000000004fd4                io_sti
@@ -194,7 +194,7 @@ LOAD obj/func.o
                 0x00000000000050f4                farcall
                 0x00000000000050f9                asm_cons_putchar
 
-.data           0x0000000000310000     0x146c ロードアドレス 0x0000000000005111
+.data           0x0000000000310000     0x146c ロードアドレス 0x0000000000005113
  *(.data)
  .data          0x0000000000310000        0x0 obj/mtask.o
  .data          0x0000000000310000      0x140 obj/graphic.o

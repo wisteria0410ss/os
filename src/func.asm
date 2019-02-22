@@ -206,10 +206,12 @@ farcall:    ;void farcall(int, int);
     
 asm_cons_putchar:
     sti
+    pushad
     push    1
     and     eax, 0xff
     push    eax
     push    dword [0x0fec]
     call    cons_putchar
     add     esp, 12
+    popad
     iretd
