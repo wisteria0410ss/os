@@ -208,6 +208,7 @@ int cmd_app(Console *cons, int *fat, char *cmdline){
 	}
 	if(finfo != 0){
 		p = (char *)memman_alloc_4k(memman, finfo->size);
+		*((int *) 0x0fe8) = (int)p;
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
 		set_segmdesc(gdt+1003, finfo->size-1, (int)p, AR_CODE32_ER);
 		farcall(0, 1003*8);
@@ -232,16 +233,17 @@ void cons_nputstr(Console *cons, char *s, int len){
 }
 
 void hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
+	int cs_base = *((int *) 0x0fe8);
 	Console *cons = (Console *) *((int *)0x0fec);
 	switch(edx){
 		case 1:
 			cons_putchar(cons, eax & 0xff, 1);
 			break;
 		case 2:
-			cons_putstr(cons, (char *)ebx);
+			cons_putstr(cons, (char *)ebx + cs_base);
 			break;
 		case 3:
-			cons_nputstr(cons, (char *)ebx, ecx);
+			cons_nputstr(cons, (char *)ebx + cs_base, ecx);
 			break;
 	}
 	return;
