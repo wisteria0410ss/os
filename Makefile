@@ -27,7 +27,7 @@ obj/%.o: src/%.c src/bootpack.h Makefile
 
 bin/bootpack.hrb: $(OBJS) src/har.lds Makefile
 	ld -o $@ $(OBJS) -e os_main -Map lst/bootpack.map -m elf_i386 -T src/har.lds
-	#gcc -march=i486 -m32 -nostdlib -T src/har.lds $(OBJS) -Xlinker -Map -Xlinker lst/bootpack.map -o $@
+	#gcc -march=i486 -m32 -nostdlib -T src/har.lds $(OBJS) -Wl,-Map=lst/bootpack.map -o $@
 
 bin/haribote.sys: bin/asmhead.bin bin/bootpack.hrb Makefile
 	cat bin/asmhead.bin bin/bootpack.hrb > $@
