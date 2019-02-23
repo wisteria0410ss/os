@@ -1,5 +1,6 @@
 bits 32
     mov     ecx, msg
+    mov     edx, 1
 putloop:
     mov     al, [cs:ecx]
     cmp     al, 0

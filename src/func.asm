@@ -8,8 +8,8 @@ section .text
     global load_cr0, store_cr0
     global load_tr, farjmp, farcall
     global memtest_sub
-    global asm_cons_putchar
-    extern inthandler20, inthandler21, inthandler27, inthandler2c, cons_putchar
+    global asm_hrb_api
+    extern inthandler20, inthandler21, inthandler27, inthandler2c, hrb_api
 
 io_hlt:         ; void io_hlt()
     hlt
@@ -204,14 +204,11 @@ farcall:    ;void farcall(int, int);
     call    far [esp+4]
     ret
     
-asm_cons_putchar:
+asm_hrb_api:
     sti
     pushad
-    push    1
-    and     eax, 0xff
-    push    eax
-    push    dword [0x0fec]
-    call    cons_putchar
-    add     esp, 12
+    pushad
+    call    hrb_api
+    add     esp, 32
     popad
     iretd

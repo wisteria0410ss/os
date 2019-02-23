@@ -28,7 +28,7 @@ extern void asm_inthandler20(void);
 extern void asm_inthandler21(void);
 extern void asm_inthandler27(void);
 extern void asm_inthandler2c(void);
-extern void asm_cons_putchar(void);
+extern void asm_hrb_api(void);
 extern unsigned int memtest_sub(unsigned int, unsigned int);
 extern void load_tr(int);
 extern void farjmp(int, int);
@@ -286,6 +286,9 @@ void cmd_cls(Console *);
 void cmd_dir(Console *);
 void cmd_type(Console *, int *, char *);
 int cmd_app(Console *, int *, char *);
+void cons_putstr(Console *, char *);
+void cons_nputstr(Console *, char *, int);
+void hrb_api(int, int, int, int, int, int, int, int);
 
 // file.c
 typedef struct{

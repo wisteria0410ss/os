@@ -127,12 +127,9 @@ void cons_runcmd(char *cmdline, Console *cons, int *fat, unsigned int memtotal){
 	else if(starts_with(cmdline, "type ") || strcmp(cmdline, "type") == 0) cmd_type(cons, fat, cmdline);
 	else if(cmdline[0] != 0){
 		if(cmd_app(cons, fat, cmdline) == 0){
-			int len;
 			char s[256];
-			len = msprintf(s, "command \'%s\' not found.", cmdline);
-			putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, len);
-			cons_newline(cons);
-			cons_newline(cons);
+			msprintf(s, "command \'%s\' not found.\n\n", cmdline);
+			cons_putstr(cons, s);
 		}
 	}
 	return;
@@ -140,15 +137,9 @@ void cons_runcmd(char *cmdline, Console *cons, int *fat, unsigned int memtotal){
 
 void cmd_mem(Console *cons, unsigned int memtotal){
 	MemMan *memman = (MemMan *)MEMMAN_ADDR;
-	char s[30];
-	int len;
-	len = msprintf(s, "Total  %d MiB", memtotal / (1024*1024));
-	putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, len);
-	cons_newline(cons);
-	len = msprintf(s, "Free   %d kiB", memman_total(memman) / 1024);
-	putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, len);
-	cons_newline(cons);
-	cons_newline(cons);
+	char s[60];
+	msprintf(s, "Total  %d MiB\nFree   %d kiB\n\n", memtotal / (1024*1024), memman_total(memman) / 1024);
+	cons_putstr(cons, s);
 	return;
 }
 
@@ -170,9 +161,8 @@ void cmd_dir(Console *cons){
 		if(finfo[x].name[0] == 0x00) break;
 		if(finfo[x].name[0] != 0xe5){
 			if((finfo[x].type & 0x18) == 0){
-				int len = msprintf(s, "%.8s.%.3s  %d", finfo[x].name, finfo[x].ext, finfo[x].size);
-				putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, s, len);
-				cons_newline(cons);
+				msprintf(s, "%.8s.%.3s  %d\n", finfo[x].name, finfo[x].ext, finfo[x].size);
+				cons_putstr(cons, s);
 			}
 		}
 	}
@@ -189,11 +179,10 @@ void cmd_type(Console *cons, int *fat, char *cmdline){
 	if(finfo != 0){
 		char *p = (char *)memman_alloc_4k(memman, finfo->size);
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
-		for(int i=0;i<finfo->size;i++) cons_putchar(cons, p[i], 1);
+		cons_nputstr(cons, p, finfo->size);
 		memman_free_4k(memman, (unsigned int)p, finfo->size);
 	}else{
-		putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "File not found.", 15);
-		cons_newline(cons);
+		cons_putstr(cons, "File not found.\n");
 	}
 	cons_newline(cons);
 	return;
@@ -227,4 +216,33 @@ int cmd_app(Console *cons, int *fat, char *cmdline){
 		return 1;
 	}
 	return 0;
+}
+
+void cons_putstr(Console *cons, char *s){
+	for(;*s!=0;s++) cons_putchar(cons, *s, 1);
+	return;
+}
+
+void cons_nputstr(Console *cons, char *s, int len){
+	for(int i=0;i<len;i++){
+		if(s[i] == 0) break;
+		cons_putchar(cons, s[i], 1);
+	}
+	return;
+}
+
+void hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
+	Console *cons = (Console *) *((int *)0x0fec);
+	switch(edx){
+		case 1:
+			cons_putchar(cons, eax & 0xff, 1);
+			break;
+		case 2:
+			cons_putstr(cons, (char *)ebx);
+			break;
+		case 3:
+			cons_nputstr(cons, (char *)ebx, ecx);
+			break;
+	}
+	return;
 }
