@@ -7,7 +7,7 @@ void console_task(Sheet *sheet, unsigned int memtotal){
 	int i, fifobuf[128];
 	int *fat = (int *)memman_alloc_4k(memman, 4*2880);
 	Console cons;
-	char cmdline[30];
+	char cmdline[128];
 	cons.sht = sheet;
 	cons.cur_x = 8;
 	cons.cur_y = 28;
