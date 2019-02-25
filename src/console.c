@@ -214,15 +214,8 @@ int cmd_app(Console *cons, int *fat, char *cmdline){
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
 		set_segmdesc(gdt+1003, finfo->size-1, (int)p, AR_CODE32_ER + 0x60);
 		set_segmdesc(gdt+1004, 64*1024 - 1, (int)q, AR_DATA32_RW + 0x60);
-		if(finfo->size >= 8 && starts_with(p+4, "Hari")){
-			p[0] = 0xe8;
-			p[1] = 0x16;
-			p[2] = 0x00;
-			p[3] = 0x00;
-			p[4] = 0x00;
-			p[5] = 0xcb;
-		}
-		start_app(0, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
+		if(finfo->size >= 8 && starts_with(p+4, "Hari")) start_app(0x1b, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
+		else start_app(0, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
 		memman_free_4k(memman, (int)p, finfo->size);
 		memman_free_4k(memman, (int)q, 64*1024);
 		cons_newline(cons);
