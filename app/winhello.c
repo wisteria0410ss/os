@@ -1,5 +1,4 @@
-extern int api_openwin(char *, int, int, int, char *);
-extern void api_end(void);
+#include "api.h"
 
 char buf[150*50];
 

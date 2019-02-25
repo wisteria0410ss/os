@@ -1,5 +1,4 @@
-void api_putchar(int c);
-void api_end(void);
+#include "api.h"
 
 void app_main(){
     char a[100];

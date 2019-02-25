@@ -1,7 +1,7 @@
 .PHONY: img run run-noframe run-vbox clean
 
 OBJS := $(patsubst src/%.c,obj/%.o,$(filter-out src/hankaku.c src/test.c,$(wildcard src/*.c))) obj/hankaku.o obj/func.o
-APPS := $(patsubst app/%.c,bin/%.hrb,$(patsubst app/%.asm,bin/%.hrb,$(filter-out app/a_nasm.asm app/har.lds,$(wildcard app/*.*))))
+APPS := $(patsubst app/%.c,bin/%.hrb,$(patsubst app/%.asm,bin/%.hrb,$(filter-out app/api.asm app/har.lds app/api.h,$(wildcard app/*.*))))
 FILES := src/strcmp.c src/ipl.asm src/fifo.c $(APPS)
 
 default:
@@ -10,16 +10,16 @@ default:
 bin/%.bin: src/%.asm Makefile
 	nasm $< -o $@ -l lst/$(*F).lst
 
-bin/%.hrb: app/%.c obj/a_nasm.o app/har.lds Makefile
+bin/%.hrb: app/%.c app/api.h obj/api.o app/har.lds Makefile
 	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -c $< -o obj/$(*F).o
-	ld -o $@ obj/$(*F).o obj/a_nasm.o -e app_main -Map lst/$(*F).map -m elf_i386 -T app/har.lds
+	ld -o $@ obj/$(*F).o obj/api.o -e app_main -Map lst/$(*F).map -m elf_i386 -T app/har.lds
 
-bin/%.hrb: app/%.asm Makefile
+bin/%.hrb: app/%.asm obj/api.o app/har.lds Makefile
 	nasm -felf $< -o obj/$(*F).o -l lst/$(*F).lst
-	ld -o $@ obj/$(*F).o obj/a_nasm.o -e app_main -Map lst/$(*F).map -m elf_i386 -T app/har.lds
+	ld -o $@ obj/$(*F).o obj/api.o -e app_main -Map lst/$(*F).map -m elf_i386 -T app/har.lds
 
-obj/a_nasm.o: app/a_nasm.asm Makefile
-	nasm -felf app/a_nasm.asm -o obj/a_nasm.o
+obj/api.o: app/api.asm Makefile
+	nasm -felf app/api.asm -o obj/api.o
 
 util/makefont.out: util/makefont.c Makefile
 	gcc $< -o $@

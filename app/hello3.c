@@ -18,8 +18,7 @@ void api_end(){
     );
 }*/
 
-extern void api_putchar(int c);
-extern void api_end(void);
+#include "api.h"
 
 void app_main(){
     api_putchar('H');

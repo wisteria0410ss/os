@@ -1,4 +1,4 @@
-extern void api_putchar(int c);
+#include "api.h"
 
 void app_main(){
     while(1){
