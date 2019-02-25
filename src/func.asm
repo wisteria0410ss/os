@@ -8,7 +8,7 @@ section .text
     global load_cr0, store_cr0
     global load_tr, farjmp, farcall, start_app
     global memtest_sub
-    global asm_hrb_api
+    global asm_hrb_api, asm_end_app
     extern inthandler20, inthandler21, inthandler27, inthandler2c, inthandler0d, inthandler0c, hrb_api
 
 io_hlt:         ; void io_hlt()
@@ -123,7 +123,7 @@ store_cr0:      ; void store_cr0(int);
     mov     es, ax
     call    %1
     cmp     eax, 0
-    jne     end_app
+    jne     asm_end_app
     pop     eax
     popad
     pop     ds
@@ -206,14 +206,16 @@ asm_hrb_api:
     mov     es, ax
     call    hrb_api
     cmp     eax, 0
-    jne     end_app
+    jne     asm_end_app
     add     esp, 32
     popad
     pop     es
     pop     ds
     iretd
-end_app:
+
+asm_end_app:
     mov     esp, [eax]
+    mov     dword [eax+4], 0
     popad
     ret
 

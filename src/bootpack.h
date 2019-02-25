@@ -36,6 +36,7 @@ extern void load_tr(int);
 extern void farjmp(int, int);
 extern void farcall(int, int);
 extern void start_app(int, int, int, int, int *);
+extern void asm_end_app(void);
 
 // memory.c
 #define MEMMAN_FREES	4090

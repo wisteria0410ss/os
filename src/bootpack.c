@@ -36,6 +36,7 @@ void os_main(void){
 	Sheet *sht_back, *sht_mouse, *sht_win, *sht_cons;
 	unsigned char *buf_back, buf_mouse[256], *buf_win, *buf_cons;
 	Task *task_a, *task_cons;
+	Console *cons;
 	
 	init_gdtidt();
 	init_pic();
@@ -179,6 +180,14 @@ void os_main(void){
 					if(key_to == 1){		// コンソールへ
 						fifo32_push(&task_cons->fifo, 256 + 10);
 					}
+				}
+				if(i == 256 + 0x3b && key_shift != 0 && task_cons->tss.ss0 != 0){	// shift + f1
+					cons = (Console *) *((int *)0x0fec);
+					cons_putstr(cons, "\nBreak(key): \n");
+					io_cli();
+					task_cons->tss.eax = (int)&(task_cons->tss.esp0);
+					task_cons->tss.eip = (int)asm_end_app;
+					io_sti(); 
 				}
 				if(i == 256 + 0x2a) key_shift |= 1;
 				if(i == 256 + 0x36) key_shift |= 2;
