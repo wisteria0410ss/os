@@ -193,6 +193,7 @@ int cmd_app(Console *cons, int *fat, char *cmdline){
 	FileInfo *finfo;
 	SegmentDescriptor *gdt = (SegmentDescriptor *)ADR_GDT;
 	char name[18], *p, *q;
+	int segsiz, datsiz, esp, dathrb;
 	Task *task = task_now();
 	int i;
 
@@ -209,15 +210,23 @@ int cmd_app(Console *cons, int *fat, char *cmdline){
 	}
 	if(finfo != 0){
 		p = (char *)memman_alloc_4k(memman, finfo->size);
-		q = (char *)memman_alloc_4k(memman, 64 * 1024);
-		*((int *) 0x0fe8) = (int)p;
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
-		set_segmdesc(gdt+1003, finfo->size-1, (int)p, AR_CODE32_ER + 0x60);
-		set_segmdesc(gdt+1004, 64*1024 - 1, (int)q, AR_DATA32_RW + 0x60);
-		if(finfo->size >= 8 && starts_with(p+4, "Hari")) start_app(0x1b, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
-		else start_app(0, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
+		if(finfo->size >= 36 && starts_with(p+4, "Hari") && *p == 0x00){
+			segsiz = *((int *)(p+0x0000));
+			esp    = *((int *)(p+0x000c));
+			datsiz = *((int *)(p+0x0010));
+			dathrb = *((int *)(p+0x0014));
+			q = (char *)memman_alloc_4k(memman, segsiz);
+			*((int *)0x0fe8) = (int)q;
+			set_segmdesc(gdt+1003, finfo->size-1, (int)p, AR_CODE32_ER + 0x60);
+			set_segmdesc(gdt+1004, segsiz - 1,    (int)q, AR_DATA32_RW + 0x60);
+			for(i=0;i<datsiz;i++) q[esp+i] = p[dathrb+i];
+			start_app(0x1b, 1003*8, esp, 1004*8, &(task->tss.esp0));
+			memman_free_4k(memman, (int)q, segsiz);
+		}else{
+			cons_putstr(cons, ".hrb file format error.\n");
+		}
 		memman_free_4k(memman, (int)p, finfo->size);
-		memman_free_4k(memman, (int)q, 64*1024);
 		cons_newline(cons);
 		return 1;
 	}
@@ -241,6 +250,7 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	int cs_base = *((int *) 0x0fe8);
 	Task *task = task_now();
 	Console *cons = (Console *) *((int *)0x0fec);
+	char s[12];
 	switch(edx){
 		case 1:
 			cons_putchar(cons, eax & 0xff, 1);

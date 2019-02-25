@@ -1,4 +1,7 @@
 bits 32
+    global  app_main
+    
+app_main:
     mov     ecx, msg
     mov     edx, 1
 putloop:

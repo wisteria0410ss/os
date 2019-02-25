@@ -1,4 +1,4 @@
-/* https://vanya.jp.net/os/haribote.html#hrb */
+/* https://vanya.jp.net/os/haribote.html#gcchrb */
 OUTPUT_FORMAT("binary");
 
 SECTIONS

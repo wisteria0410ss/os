@@ -10,12 +10,13 @@ default:
 bin/%.bin: src/%.asm Makefile
 	nasm $< -o $@ -l lst/$(*F).lst
 
-bin/%.hrb: app/%.c obj/a_nasm.o Makefile
+bin/%.hrb: app/%.c obj/a_nasm.o app/har.lds Makefile
 	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -c $< -o obj/$(*F).o
 	ld -o $@ obj/$(*F).o obj/a_nasm.o -e app_main -Map lst/$(*F).map -m elf_i386 -T app/har.lds
 
 bin/%.hrb: app/%.asm Makefile
-	nasm $< -o $@ -l lst/$(*F).lst
+	nasm -felf $< -o obj/$(*F).o -l lst/$(*F).lst
+	ld -o $@ obj/$(*F).o obj/a_nasm.o -e app_main -Map lst/$(*F).map -m elf_i386 -T app/har.lds
 
 obj/a_nasm.o: app/a_nasm.asm Makefile
 	nasm -felf app/a_nasm.asm -o obj/a_nasm.o
