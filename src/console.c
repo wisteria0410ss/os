@@ -193,6 +193,7 @@ int cmd_app(Console *cons, int *fat, char *cmdline){
 	FileInfo *finfo;
 	SegmentDescriptor *gdt = (SegmentDescriptor *)ADR_GDT;
 	char name[18], *p, *q;
+	Task *task = task_now();
 	int i;
 
 	for(i=0;i<13;i++){
@@ -211,8 +212,8 @@ int cmd_app(Console *cons, int *fat, char *cmdline){
 		q = (char *)memman_alloc_4k(memman, 64 * 1024);
 		*((int *) 0x0fe8) = (int)p;
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
-		set_segmdesc(gdt+1003, finfo->size-1, (int)p, AR_CODE32_ER);
-		set_segmdesc(gdt+1004, 64*1024 - 1, (int)q, AR_DATA32_RW);
+		set_segmdesc(gdt+1003, finfo->size-1, (int)p, AR_CODE32_ER + 0x60);
+		set_segmdesc(gdt+1004, 64*1024 - 1, (int)q, AR_DATA32_RW + 0x60);
 		if(finfo->size >= 8 && starts_with(p+4, "Hari")){
 			p[0] = 0xe8;
 			p[1] = 0x16;
@@ -221,7 +222,7 @@ int cmd_app(Console *cons, int *fat, char *cmdline){
 			p[4] = 0x00;
 			p[5] = 0xcb;
 		}
-		start_app(0, 1003*8, 64*1024, 1004*8);
+		start_app(0, 1003*8, 64*1024, 1004*8, &(task->tss.esp0));
 		memman_free_4k(memman, (int)p, finfo->size);
 		memman_free_4k(memman, (int)q, 64*1024);
 		cons_newline(cons);
@@ -243,8 +244,9 @@ void cons_nputstr(Console *cons, char *s, int len){
 	return;
 }
 
-void hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
+int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
 	int cs_base = *((int *) 0x0fe8);
+	Task *task = task_now();
 	Console *cons = (Console *) *((int *)0x0fec);
 	switch(edx){
 		case 1:
@@ -256,12 +258,16 @@ void hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		case 3:
 			cons_nputstr(cons, (char *)ebx + cs_base, ecx);
 			break;
+		case 4:
+			return &(task->tss.esp0);
+			break;
 	}
-	return;
+	return 0;
 }
 
-int inthandler0d(int *esp){
+int *inthandler0d(int *esp){
 	Console *cons = (Console *) *((int *)0x0fec);
+	Task *task = task_now();
 	cons_putstr(cons, "\nINT 0D: General Protected Exception.\n");
-	return 1;
+	return &(task->tss.esp0);
 }

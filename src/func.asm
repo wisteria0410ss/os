@@ -95,220 +95,54 @@ store_cr0:      ; void store_cr0(int);
     mov     cr0, eax
     ret
 
-asm_inthandler20:
+%macro asm_inthandler 1
     push    es
     push    ds
 	pushad
-    mov     ax, ss
-    cmp     ax, 1*8
-    jne     .from_app
     mov     eax, esp
-    push    ss
     push    eax
     mov     ax, ss
     mov     ds, ax
     mov     es, ax
-    call    inthandler20
-    add     esp, 8
-    popad
-    pop     ds
-    pop     es
-    iretd
-.from_app
-    mov     eax, 1*8
-    mov     ds, ax
-    mov     ecx, [0x0fe4]
-    add     ecx, -8
-    mov     [ecx+4], ss
-    mov     [ecx], esp
-    mov     ss, ax
-    mov     es, ax
-    mov     esp, ecx
-    call    inthandler20
-    pop     ecx
+    call    %1
     pop     eax
-    mov     ss, ax
-    mov     esp, ecx
     popad
     pop     ds
     pop     es
     iretd
+%endmacro
+
+asm_inthandler20:
+    asm_inthandler inthandler20
 
 asm_inthandler21:
-    push    es
-    push    ds
-	pushad
-    mov     ax, ss
-    cmp     ax, 1*8
-    jne     .from_app
-    mov     eax, esp
-    push    ss
-    push    eax
-    mov     ax, ss
-    mov     ds, ax
-    mov     es, ax
-    call    inthandler21
-    add     esp, 8
-    popad
-    pop     ds
-    pop     es
-    iretd
-.from_app
-    mov     eax, 1*8
-    mov     ds, ax
-    mov     ecx, [0x0fe4]
-    add     ecx, -8
-    mov     [ecx+4], ss
-    mov     [ecx], esp
-    mov     ss, ax
-    mov     es, ax
-    mov     esp, ecx
-    call    inthandler21
-    pop     ecx
-    pop     eax
-    mov     ss, ax
-    mov     esp, ecx
-    popad
-    pop     ds
-    pop     es
-    iretd
+    asm_inthandler inthandler21
 
 asm_inthandler27:
-    push    es
-    push    ds
-	pushad
-    mov     ax, ss
-    cmp     ax, 1*8
-    jne     .from_app
-    mov     eax, esp
-    push    ss
-    push    eax
-    mov     ax, ss
-    mov     ds, ax
-    mov     es, ax
-    call    inthandler27
-    add     esp, 8
-    popad
-    pop     ds
-    pop     es
-    iretd
-.from_app
-    mov     eax, 1*8
-    mov     ds, ax
-    mov     ecx, [0x0fe4]
-    add     ecx, -8
-    mov     [ecx+4], ss
-    mov     [ecx], esp
-    mov     ss, ax
-    mov     es, ax
-    mov     esp, ecx
-    call    inthandler27
-    pop     ecx
-    pop     eax
-    mov     ss, ax
-    mov     esp, ecx
-    popad
-    pop     ds
-    pop     es
-    iretd
+    asm_inthandler inthandler27
 
 asm_inthandler2c:
-    push    es
-    push    ds
-	pushad
-    mov     ax, ss
-    cmp     ax, 1*8
-    jne     .from_app
-    mov     eax, esp
-    push    ss
-    push    eax
-    mov     ax, ss
-    mov     ds, ax
-    mov     es, ax
-    call    inthandler2c
-    add     esp, 8
-    popad
-    pop     ds
-    pop     es
-    iretd
-.from_app
-    mov     eax, 1*8
-    mov     ds, ax
-    mov     ecx, [0x0fe4]
-    add     ecx, -8
-    mov     [ecx+4], ss
-    mov     [ecx], esp
-    mov     ss, ax
-    mov     es, ax
-    mov     esp, ecx
-    call    inthandler2c
-    pop     ecx
-    pop     eax
-    mov     ss, ax
-    mov     esp, ecx
-    popad
-    pop     ds
-    pop     es
-    iretd
+    asm_inthandler inthandler2c
 
 asm_inthandler0d:
     sti
     push    es
     push    ds
 	pushad
-    mov     ax, ss
-    cmp     ax, 1*8
-    jne     .from_app
-    
     mov     eax, esp
-    push    ss
     push    eax
     mov     ax, ss
     mov     ds, ax
     mov     es, ax
     call    inthandler0d
-    add     esp, 8
-    popad
-    pop     ds
-    pop     es
-    add     esp, 4
-    iretd
-.from_app
-    cli
-    mov     eax, 1*8
-    mov     ds, ax
-    mov     ecx, [0x0fe4]
-    add     ecx, -8
-    mov     [ecx+4], ss
-    mov     [ecx], esp
-    mov     ss, ax
-    mov     es, ax
-    mov     esp, ecx
-    sti
-    call    inthandler0d
-    cli
     cmp     eax, 0
-    jne     .kill
-    pop     ecx
+    jne     end_app
     pop     eax
-    mov     ss, ax
-    mov     esp, ecx
     popad
     pop     ds
     pop     es
     add     esp, 4
     iretd
-.kill:
-    mov     eax, 1*8
-    mov     es, ax
-    mov     ss, ax
-    mov     ds, ax
-    mov     fs, ax
-    mov     gs, ax
-    mov     esp, [0x0fe4]
-    sti
-    popad
-    ret
 
 memtest_sub:        ; unsigned int memtest_sub(unsigned int, unsigned int);
     push    edi
@@ -356,80 +190,45 @@ farcall:    ; void farcall(int, int);
     ret
     
 asm_hrb_api:
+    sti
     push    ds
     push    es
     pushad
-    mov     eax, 1*8
+    pushad    
+    mov     ax, ss
     mov     ds, ax
-    mov     ecx, [0x0fe4]
-    add     ecx, -40
-    mov     [ecx+32], esp
-    mov     [ecx+36], ss
-    mov     edx, [esp]
-    mov     ebx, [esp+4]
-    mov     [ecx], edx
-    mov     [ecx+4], ebx
-    mov     edx, [esp]
-    mov     ebx, [esp+4]
-    mov     [ecx], edx
-    mov     [ecx+4], ebx
-    mov     edx, [esp+8]
-    mov     ebx, [esp+12]
-    mov     [ecx+8], edx
-    mov     [ecx+12], ebx
-    mov     edx, [esp+16]
-    mov     ebx, [esp+20]
-    mov     [ecx+16], edx
-    mov     [ecx+20], ebx
-    mov     edx, [esp+24]
-    mov     ebx, [esp+28]
-    mov     [ecx+24], edx
-    mov     [ecx+28], ebx
-    
     mov     es, ax
-    mov     ss, ax
-    mov     esp, ecx
-    sti
-
     call    hrb_api
-
-    mov     ecx, [esp+32]
-    mov     eax, [esp+36]
-    cli
-    mov     ss, ax
-    mov     esp, ecx
+    cmp     eax, 0
+    jne     end_app
+    add     esp, 32
     popad
     pop     es
     pop     ds
     iretd
+end_app:
+    mov     esp, [eax]
+    popad
+    ret
 
-start_app:  ; void start_app(int, int, int, int)
+start_app:  ; void start_app(int, int, int, int*)
     pushad
     mov     eax, [esp+36]
     mov     ecx, [esp+40]
     mov     edx, [esp+44]
     mov     ebx, [esp+48]
-    mov     [0x0fe4], esp
-    cli
+    mov     ebp, [esp+52]
+    mov     [ebp], esp
+    mov     [ebp+4], ss
     mov     es, bx
-    mov     ss, bx
     mov     ds, bx
     mov     fs, bx
     mov     gs, bx
-    mov     esp, edx
-    sti
+
+    or      ecx, 3
+    or      ebx, 3
+    push    ebx
+    push    edx
     push    ecx
     push    eax
-    call    far [esp]
-
-    mov     eax, 1*8
-    cli
-    mov     es, ax
-    mov     ss, ax
-    mov     ds, ax
-    mov     fs, ax
-    mov     gs, ax
-    mov     esp, [0x0fe4]
-    sti
-    popad
-    ret
+    retf

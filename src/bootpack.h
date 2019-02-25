@@ -34,7 +34,7 @@ extern unsigned int memtest_sub(unsigned int, unsigned int);
 extern void load_tr(int);
 extern void farjmp(int, int);
 extern void farcall(int, int);
-extern void start_app(int, int, int, int);
+extern void start_app(int, int, int, int, int *);
 
 // memory.c
 #define MEMMAN_FREES	4090
@@ -290,8 +290,8 @@ void cmd_type(Console *, int *, char *);
 int cmd_app(Console *, int *, char *);
 void cons_putstr(Console *, char *);
 void cons_nputstr(Console *, char *, int);
-void hrb_api(int, int, int, int, int, int, int, int);
-int inthandler0d(int *);
+int *hrb_api(int, int, int, int, int, int, int, int);
+int *inthandler0d(int *);
 
 // file.c
 typedef struct{
