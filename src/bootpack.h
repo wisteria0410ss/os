@@ -24,6 +24,7 @@ extern void load_gdtr(int, int);
 extern void load_idtr(int, int);
 extern int load_cr0(void);
 extern void store_cr0(int);
+extern void asm_inthandler0c(void);
 extern void asm_inthandler0d(void);
 extern void asm_inthandler20(void);
 extern void asm_inthandler21(void);
@@ -291,6 +292,7 @@ int cmd_app(Console *, int *, char *);
 void cons_putstr(Console *, char *);
 void cons_nputstr(Console *, char *, int);
 int *hrb_api(int, int, int, int, int, int, int, int);
+int *inthandler0c(int *);
 int *inthandler0d(int *);
 
 // file.c

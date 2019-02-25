@@ -265,9 +265,22 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	return 0;
 }
 
+int *inthandler0c(int *esp){
+	Console *cons = (Console *) *((int *)0x0fec);
+	Task *task = task_now();
+	char s[30];
+	cons_putstr(cons, "\nINT 0C: Stack Exception.\n");
+	msprintf(s, "EIP = %08X\n", esp[11]);
+	cons_putstr(cons, s);
+	return &(task->tss.esp0);
+}
+
 int *inthandler0d(int *esp){
 	Console *cons = (Console *) *((int *)0x0fec);
 	Task *task = task_now();
+	char s[30];
 	cons_putstr(cons, "\nINT 0D: General Protected Exception.\n");
+	msprintf(s, "EIP = %08X\n", esp[11]);
+	cons_putstr(cons, s);
 	return &(task->tss.esp0);
 }
