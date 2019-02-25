@@ -275,6 +275,16 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 			sheet_updown(sht, 3);
 			reg[7] = (int)sht;
 			break;
+		case 6:
+			sht = (Sheet *) ebx;
+			putfonts8_asc(sht->buf, sht->bxsize, esi, edi, eax, (char *)ebp + ds_base);
+			sheet_refresh(sht, esi, edi, esi+ecx*8, edi+16);
+			break;
+		case 7:
+			sht = (Sheet *) ebx;
+			boxfill8(sht->buf, sht->bxsize, ebp, eax, ecx, esi, edi);
+			sheet_refresh(sht, eax, ecx, esi+1, edi+1);
+			break;
 	}
 	return 0;
 }
