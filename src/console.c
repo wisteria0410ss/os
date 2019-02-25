@@ -247,22 +247,33 @@ void cons_nputstr(Console *cons, char *s, int len){
 }
 
 int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
-	int cs_base = *((int *) 0x0fe8);
+	int ds_base = *((int *) 0x0fe8);
 	Task *task = task_now();
 	Console *cons = (Console *) *((int *)0x0fec);
-	char s[12];
+	ShtCtl *shtctl = (ShtCtl *) *((int *)0x0fe4);
+	Sheet *sht;
+	int *reg = &eax + 1;
+
 	switch(edx){
 		case 1:
 			cons_putchar(cons, eax & 0xff, 1);
 			break;
 		case 2:
-			cons_putstr(cons, (char *)ebx + cs_base);
+			cons_putstr(cons, (char *)ebx + ds_base);
 			break;
 		case 3:
-			cons_nputstr(cons, (char *)ebx + cs_base, ecx);
+			cons_nputstr(cons, (char *)ebx + ds_base, ecx);
 			break;
 		case 4:
 			return &(task->tss.esp0);
+			break;
+		case 5:
+			sht = sheet_alloc(shtctl);
+			sheet_setbuf(sht, (char *)ebx + ds_base, esi, edi, eax);
+			make_window8((char *) ebx + ds_base, esi, edi, (char *) ecx + ds_base, 0);
+			sheet_slide(sht, 100, 50);
+			sheet_updown(sht, 3);
+			reg[7] = (int)sht;
 			break;
 	}
 	return 0;

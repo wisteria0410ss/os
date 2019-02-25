@@ -85,6 +85,8 @@ void os_main(void){
 	*((int *)(task_cons->tss.esp + 8)) = memtotal;
 	task_run(task_cons, 2, 2);
 
+	*((int *) 0x0fe4) = (int)shtctl;
+
 	sht_win = sheet_alloc(shtctl);
 	buf_win = (unsigned char *)memman_alloc_4k(memman, 160*52);
 	sheet_setbuf(sht_win, buf_win, 144, 52, -1);
@@ -104,7 +106,7 @@ void os_main(void){
 	
 	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_cons, 32, 4);
-	sheet_slide(sht_win,  64,  56);
+	sheet_slide(sht_win,  binfo->scrnx - 256,  binfo->scrny - 144);
 	sheet_slide(sht_mouse, mx, my);
 	sheet_updown(sht_back, 0);
 	sheet_updown(sht_cons, 1);
