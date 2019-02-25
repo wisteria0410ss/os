@@ -4,12 +4,12 @@ section .text
     global io_out8, io_out16, io_out32
     global io_load_eflags, io_store_eflags
     global load_gdtr, load_idtr
-    global asm_inthandler20, asm_inthandler21, asm_inthandler27, asm_inthandler2c
+    global asm_inthandler20, asm_inthandler21, asm_inthandler27, asm_inthandler2c, asm_inthandler0d
     global load_cr0, store_cr0
     global load_tr, farjmp, farcall, start_app
     global memtest_sub
     global asm_hrb_api
-    extern inthandler20, inthandler21, inthandler27, inthandler2c, hrb_api
+    extern inthandler20, inthandler21, inthandler27, inthandler2c, inthandler0d, hrb_api
 
 io_hlt:         ; void io_hlt()
     hlt
@@ -250,6 +250,65 @@ asm_inthandler2c:
     pop     ds
     pop     es
     iretd
+
+asm_inthandler0d:
+    sti
+    push    es
+    push    ds
+	pushad
+    mov     ax, ss
+    cmp     ax, 1*8
+    jne     .from_app
+    
+    mov     eax, esp
+    push    ss
+    push    eax
+    mov     ax, ss
+    mov     ds, ax
+    mov     es, ax
+    call    inthandler0d
+    add     esp, 8
+    popad
+    pop     ds
+    pop     es
+    add     esp, 4
+    iretd
+.from_app
+    cli
+    mov     eax, 1*8
+    mov     ds, ax
+    mov     ecx, [0x0fe4]
+    add     ecx, -8
+    mov     [ecx+4], ss
+    mov     [ecx], esp
+    mov     ss, ax
+    mov     es, ax
+    mov     esp, ecx
+    sti
+    call    inthandler0d
+    cli
+    cmp     eax, 0
+    jne     .kill
+    pop     ecx
+    pop     eax
+    mov     ss, ax
+    mov     esp, ecx
+    popad
+    pop     ds
+    pop     es
+    add     esp, 4
+    iretd
+.kill:
+    mov     eax, 1*8
+    mov     es, ax
+    mov     ss, ax
+    mov     ds, ax
+    mov     fs, ax
+    mov     gs, ax
+    mov     esp, [0x0fe4]
+    sti
+    popad
+    ret
 
 memtest_sub:        ; unsigned int memtest_sub(unsigned int, unsigned int);
     push    edi
