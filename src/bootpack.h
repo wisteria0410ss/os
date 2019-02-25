@@ -33,6 +33,7 @@ extern unsigned int memtest_sub(unsigned int, unsigned int);
 extern void load_tr(int);
 extern void farjmp(int, int);
 extern void farcall(int, int);
+extern void start_app(int, int, int, int);
 
 // memory.c
 #define MEMMAN_FREES	4090
