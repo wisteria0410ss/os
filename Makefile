@@ -1,7 +1,7 @@
 .PHONY: img run run-noframe run-vbox clean
 
 OBJS := $(patsubst src/%.c,obj/%.o,$(filter-out src/hankaku.c src/test.c,$(wildcard src/*.c))) obj/hankaku.o obj/func.o
-APPS := $(patsubst app/%.asm,bin/%.hrb,$(filter-out app/a_nasm.asm,$(wildcard app/*.asm))) bin/a.hrb bin/hello3.hrb
+APPS := $(patsubst app/%.asm,bin/%.hrb,$(filter-out app/a_nasm.asm,$(wildcard app/*.asm))) bin/a.hrb bin/hello3.hrb bin/crack.hrb
 FILES := src/strcmp.c src/ipl.asm src/fifo.c $(APPS)
 
 default:
@@ -18,6 +18,9 @@ obj/a.o: app/a_nasm.asm Makefile
 
 bin/a.hrb: app/a.c obj/a.o app/har.lds Makefile
 	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -T app/har.lds app/a.c obj/a.o -o $@
+
+bin/crack.hrb: app/crack.c Makefile
+	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -T app/har.lds $< -o $@
 
 bin/hello3.hrb: app/hello3.c obj/a.o app/har.lds Makefile
 	gcc -fno-pie -march=i486 -m32 -masm=intel -nostdlib -T app/har.lds app/hello3.c obj/a.o -o $@
