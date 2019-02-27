@@ -3,7 +3,7 @@
 #define WIN_W 150
 #define WIN_H 50
 
-char buf[WIN_W*WIN_H];
+static char buf[WIN_W*WIN_H];
 
 void app_main(){
     int win;
