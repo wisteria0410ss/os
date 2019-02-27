@@ -65,6 +65,7 @@ typedef struct{
 	unsigned char *buf;
 	int bxsize, bysize, vx0, vy0, col_transp, height, flags;
 	struct ShtCtl *ctl;
+	struct Task *task;
 } Sheet;
 typedef struct ShtCtl{
 	unsigned char *vram, *map;

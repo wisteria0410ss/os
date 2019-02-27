@@ -30,6 +30,7 @@ Sheet *sheet_alloc(ShtCtl *ctl){
             sht = &ctl->sheets0[i];
             sht->flags = SHEET_USE;
             sht->height = -1;       // 非表示
+            sht->task = 0;
             return sht;
         }
     }
