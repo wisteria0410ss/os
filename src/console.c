@@ -276,27 +276,36 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 			reg[7] = (int)sht;
 			break;
 		case 6:
-			sht = (Sheet *) ebx;
+			sht = (Sheet *)(ebx & 0xfffffffe);
 			putfonts8_asc(sht->buf, sht->bxsize, esi, edi, eax, (char *)ebp + ds_base);
-			sheet_refresh(sht, esi, edi, esi+ecx*8, edi+16);
+			if((ebx & 1) == 0) sheet_refresh(sht, esi, edi, esi+ecx*8, edi+16);
 			break;
 		case 7:
-			sht = (Sheet *) ebx;
+			sht = (Sheet *)(ebx & 0xfffffffe);
 			boxfill8(sht->buf, sht->bxsize, ebp, eax, ecx, esi, edi);
-			sheet_refresh(sht, eax, ecx, esi+1, edi+1);
+			if((ebx & 1) == 0) sheet_refresh(sht, eax, ecx, esi+1, edi+1);
 			break;
 		case 8:
 			memman_init((MemMan *)(ebx + ds_base));
 			ecx &= 0xfffffff0;
-			memman_free((MemMan *)(ebx,+ds_base), eax, ecx);
+			memman_free((MemMan *)(ebx + ds_base), eax, ecx);
 			break;
 		case 9:
 			ecx = (ecx + 0x0f) & 0xfffffff0;
-			reg[7] = memman_alloc((MemMan *)(ebx, ds_base), ecx);
+			reg[7] = memman_alloc((MemMan *)(ebx + ds_base), ecx);
 			break;
 		case 10:
 			ecx = (ecx + 0x0f) & 0xfffffff0;
 			memman_free((MemMan *)(ebx + ds_base), eax, ecx);
+			break;
+		case 11:
+			sht = (Sheet *)(ebx & 0xfffffffe);
+			sht->buf[sht->bxsize * edi + esi] = eax;
+			if((ebx & 1) == 0) sheet_refresh(sht, esi, edi, esi + 1, edi + 1);
+			break;
+		case 12:
+			sht = (Sheet *) ebx;
+			sheet_refresh(sht, eax, ecx, esi, edi);
 			break;
 	}
 	return 0;

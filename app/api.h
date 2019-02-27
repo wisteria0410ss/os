@@ -8,3 +8,5 @@ extern void api_boxfillwin(int win, int x0, int y0, int x1, int y1, int col);
 extern void api_initmalloc(void);
 extern char *api_malloc(int size);
 extern void api_free(char *addr, int size);
+extern void api_point(int win, int x, int y, int col);
+extern void api_refreshwin(int win, int x0, int y0, int x1, int y1);
