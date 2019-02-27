@@ -278,6 +278,7 @@ void make_textbox8(Sheet *, int, int, int, int, int);
 typedef struct{
 	Sheet *sht;
 	int cur_x, cur_y, cur_c;
+	Timer *timer;
 } Console;
 #define CONS_W 960
 #define CONS_H 640

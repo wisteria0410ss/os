@@ -1,7 +1,6 @@
 #include "bootpack.h"
 
 void console_task(Sheet *sheet, unsigned int memtotal){
-	Timer *timer;
 	Task *task = task_now();
 	MemMan *memman = (MemMan *)MEMMAN_ADDR;
 	int i, fifobuf[128];
@@ -15,9 +14,9 @@ void console_task(Sheet *sheet, unsigned int memtotal){
 	*((int *)0x0fec) = (int)&cons;
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
-	timer = timer_alloc();
-	timer_init(timer, &task->fifo, 1);
-	timer_settime(timer, 50);
+	cons.timer = timer_alloc();
+	timer_init(cons.timer, &task->fifo, 1);
+	timer_settime(cons.timer, 50);
 
 	file_readfat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
 	
@@ -33,13 +32,13 @@ void console_task(Sheet *sheet, unsigned int memtotal){
 			io_sti();
 			if(i <= 1){
 				if(i != 0){
-					timer_init(timer, &task->fifo, 0);
+					timer_init(cons.timer, &task->fifo, 0);
 					if(cons.cur_c >= 0) cons.cur_c = COL8_FFFFFF;
 				}else{
-					timer_init(timer, &task->fifo, 1);
+					timer_init(cons.timer, &task->fifo, 1);
 					if(cons.cur_c >= 0) cons.cur_c = COL8_000000;
 				}
-				timer_settime(timer, 50);
+				timer_settime(cons.timer, 50);
 			}
 			if(i == 2) cons.cur_c = COL8_FFFFFF;
 			if(i == 3){
@@ -252,7 +251,7 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	Console *cons = (Console *) *((int *)0x0fec);
 	ShtCtl *shtctl = (ShtCtl *) *((int *)0x0fe4);
 	Sheet *sht;
-	int *reg = &eax + 1;
+	int *reg = &eax + 1, i;
 
 	switch(edx){
 		case 1:
@@ -315,6 +314,34 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		case 14:
 			sheet_free((Sheet *) ebx);
 			break;
+		case 15:
+			while(1){
+				io_cli();
+				if(fifo32_status(&task->fifo) == 0){
+					if(eax != 0) task_sleep(task);
+					else{
+						io_sti();
+						reg[7] = -1;
+						return 0;
+					}
+				}
+				i = fifo32_pop(&task->fifo);
+				io_sti();
+				if(i <= 1){
+					timer_init(cons->timer, &task->fifo, 1);
+					timer_settime(cons->timer, 50);
+				}
+				if(i == 2){
+					cons->cur_c = COL8_000000;
+				}
+				if(i == 3){
+					cons->cur_c = -1;
+				}
+				if(256 <= i && i < 512){
+					reg[7] = i-256;
+					return 0;
+				}
+			}
 	}
 	return 0;
 }

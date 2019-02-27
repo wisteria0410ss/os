@@ -3,6 +3,7 @@
     global api_initmalloc, api_malloc, api_free
     global api_point, api_linewin
     global api_refreshwin
+    global api_getkey
     global api_end
 
 section .text
@@ -166,4 +167,9 @@ api_closewin:
     int     0x40
     pop     ebx
     ret
-    
+
+api_getkey:
+    mov     edx, 15
+    mov     eax, [esp+4]
+    int     0x40
+    ret
