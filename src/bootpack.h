@@ -293,6 +293,7 @@ int cmd_app(Console *, int *, char *);
 void cons_putstr(Console *, char *);
 void cons_nputstr(Console *, char *, int);
 int *hrb_api(int, int, int, int, int, int, int, int);
+void hrb_api_linewin(Sheet *, int, int, int, int, int);
 int *inthandler0c(int *);
 int *inthandler0d(int *);
 
