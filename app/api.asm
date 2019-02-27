@@ -1,4 +1,4 @@
-    global api_putchar, api_putstr, api_openwin
+    global api_putchar, api_putstr, api_openwin, api_closewin
     global api_putstrwin, api_boxfillwin
     global api_initmalloc, api_malloc, api_free
     global api_point, api_linewin
@@ -157,5 +157,13 @@ api_linewin:
     pop     ebp
     pop     esi
     pop     edi
+    ret
+
+api_closewin:
+    push    ebx
+    mov     edx, 14
+    mov     ebx, [esp+8]
+    int     0x40
+    pop     ebx
     ret
     
