@@ -6,7 +6,7 @@ void os_main(void){
 	char s[40];
 	int fifobuf[128], keycmd_buf[32];
 	Timer *timer;
-	int mx, my;
+	int x, y, mx, my;
 	int cursor_x, cursor_c;
 	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	unsigned int memtotal;
@@ -33,7 +33,7 @@ void os_main(void){
 	MouseDec mdec;
 	MemMan *memman = (MemMan *)MEMMAN_ADDR;
 	ShtCtl *shtctl;
-	Sheet *sht_back, *sht_mouse, *sht_win, *sht_cons;
+	Sheet *sht_back, *sht_mouse, *sht_win, *sht_cons, *sht;
 	unsigned char *buf_back, buf_mouse[256], *buf_win, *buf_cons;
 	Task *task_a, *task_cons;
 	Console *cons;
@@ -230,7 +230,19 @@ void os_main(void){
 					if(mx > binfo->scrnx-1) mx = binfo->scrnx - 1;
 					if(my > binfo->scrny-1) my = binfo->scrny - 1;
 					sheet_slide(sht_mouse, mx, my);	// refreshを含む
-					if((mdec.btn & 0x01) != 0)sheet_slide(sht_win, mx-80, my-8);
+					if((mdec.btn & 0x01) != 0){
+						for(int j=shtctl->top-1;j>0;j--){
+							sht = shtctl->sheets[j];
+							x = mx - sht->vx0;
+							y = my - sht->vy0;
+							if(0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize){
+								if(sht->buf[y*sht->bxsize + x] != sht->col_transp){
+									sheet_updown(sht, shtctl->top - 1);
+									break;
+								}
+							}
+						}
+					}
 				}
 			}else if(i <= 1){
 				if(i == 1){
