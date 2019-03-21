@@ -8,7 +8,7 @@ void os_main(void){
 	Timer *timer;
 	int x, y, mx, my, mmx = -1, mmy = -1;
 	int cursor_x, cursor_c;
-	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
+	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	unsigned int memtotal;
 	static char keytable[2][0x80] = {{
 		0,	0,	'1','2','3','4','5','6','7','8','9','0','-','^',0,	0,	
@@ -33,7 +33,7 @@ void os_main(void){
 	MouseDec mdec;
 	MemMan *memman = (MemMan *)MEMMAN_ADDR;
 	ShtCtl *shtctl;
-	Sheet *sht_back, *sht_mouse, *sht_win, *sht_cons, *sht = 0;
+	Sheet *sht_back, *sht_mouse, *sht_win, *sht_cons, *sht = 0, *key_win;
 	unsigned char *buf_back, buf_mouse[256], *buf_win, *buf_cons;
 	Task *task_a, *task_cons;
 	Console *cons;
@@ -98,6 +98,10 @@ void os_main(void){
 	timer_init(timer, &fifo, 1);
 	timer_settime(timer, 50);
 
+	key_win = sht_win;
+	sht_cons->task = task_cons;
+	sht_cons->flags |= 0x20;
+
 	sht_mouse = sheet_alloc(shtctl);
 	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);
 	init_mouse_cursor8(buf_mouse, 99);
@@ -133,6 +137,10 @@ void os_main(void){
 		}else{
 			int i = fifo32_pop(&fifo);
 			io_sti();
+			if(key_win->flags == 0){
+				key_win = shtctl->sheets[shtctl->top - 1];
+				cursor_c = keywin_on(key_win, sht_win, cursor_c);
+			}
 			if(256 <= i && i < 512){
 				if(i < 256 + 0x80) s[0] = keytable[key_shift!=0][i-256];
 				else s[0] = 0;
@@ -140,7 +148,7 @@ void os_main(void){
 					if(((key_leds & 4)!=0) == (key_shift!=0)) s[0] += 0x20;
 				}
 				if(s[0] != 0){
-					if(key_to == 0){	// task_A
+					if(key_win== sht_win){	// task_A
 						if(cursor_x < 128){
 							s[1] = 0;
 							putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
@@ -151,7 +159,7 @@ void os_main(void){
 					}
 				}
 				if(i == 256 + 0x0e){		// bksp
-					if(key_to == 0){
+					if(key_win == sht_win){
 						if(cursor_x > 8){
 							putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
 							cursor_x -= 8;
@@ -161,25 +169,14 @@ void os_main(void){
 					}
 				}
 				if(i == 256 + 0x0f){		// tab
-					if(key_to == 0){
-						key_to = 1;
-						make_wtitle8(buf_win, sht_win->bxsize, "task_a", 0);
-						make_wtitle8(buf_cons, sht_cons->bxsize, "console", 1);
-						cursor_c = -1;
-						boxfill8(sht_win->buf, sht_win->bxsize, COL8_FFFFFF, cursor_x, 28, cursor_x + 7, 43);
-						fifo32_push(&task_cons->fifo, 2);
-					}else{
-						key_to = 0;
-						make_wtitle8(buf_win, sht_win->bxsize, "task_a", 1);
-						make_wtitle8(buf_cons, sht_cons->bxsize, "console", 0);
-						cursor_c = COL8_000000;
-						fifo32_push(&task_cons->fifo, 3);
-					}
-					sheet_refresh(sht_win, 0, 0, sht_win->bxsize, 21);
-					sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
+					cursor_c = keywin_off(key_win, sht_win, cursor_c, cursor_x);
+					int j = key_win->height - 1;
+					if(j == 0) j = shtctl->top - 1;
+					key_win = shtctl->sheets[j];
+					cursor_c = keywin_on(key_win, sht_win, cursor_c);
 				}
 				if(i == 256 + 0x1c){		// enter
-					if(key_to == 1){		// コンソールへ
+					if(key_win != sht_win){		// コンソールへ
 						fifo32_push(&task_cons->fifo, 256 + 10);
 					}
 				}
@@ -244,7 +241,7 @@ void os_main(void){
 											mmy = my;
 										}
 										if(sht->bxsize - 21 <= x && x < sht->bxsize - 5 && 5 <= y && y < 19){
-											if(sht->task != 0){
+											if((sht->flags & 0x10) != 0){
 												cons = (Console *)*((int *)0x0fec);
 												cons_putstr(cons, "\nBreak(mouse): \n");
 												io_cli();
@@ -284,4 +281,50 @@ void os_main(void){
 			}
 		}
 	}
+}
+
+int keywin_off(Sheet *key_win, Sheet *sht_win, int cur_c, int cur_x){
+	change_wtitle8(key_win, 0);
+	if(key_win == sht_win){
+		cur_c = -1;
+		boxfill8(sht_win->buf, sht_win->bxsize, COL8_FFFFFF, cur_x, 28, cur_x+7, 43);
+	}else if((key_win->flags & 0x20) != 0){
+		fifo32_push(&key_win->task->fifo, 3);
+	}
+
+	return cur_c;
+}
+
+int keywin_on(Sheet *key_win, Sheet *sht_win, int cur_c){
+	change_wtitle8(key_win, 1);
+	if(key_win == sht_win) cur_c = COL8_000000;
+	else if((key_win->flags & 0x20) != 0) fifo32_push(&key_win->task->fifo, 2);
+
+	return cur_c;
+}
+
+void change_wtitle8(Sheet *sht, char act){
+	int x, y, xsize = sht->bxsize;
+	char c, tc_new, tbc_new, tc_old, tbc_old, *buf = sht->buf;
+	if(act != 0){
+		tc_new = COL8_FFFFFF;
+		tbc_new = COL8_000084;
+		tc_old = COL8_C6C6C6;
+		tbc_old = COL8_848484;
+	}else{
+		tc_new = COL8_C6C6C6;
+		tbc_new = COL8_848484;
+		tc_old = COL8_FFFFFF;
+		tbc_old = COL8_000084;
+	}
+	for(y=3;y<=20;y++){
+		for(x=3;x<=xsize-4;x++){
+			c = buf[y*xsize + x];
+			if(c == tc_old && x <= xsize - 22) c = tc_new;
+			else if(c == tbc_old) c = tbc_new;
+			buf[y*xsize + x] = c;
+		}
+	}
+	sheet_refresh(sht, 3, 3, xsize, 21);
+	return;
 }

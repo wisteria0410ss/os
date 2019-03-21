@@ -311,3 +311,6 @@ void file_loadfile(int, int, char *, int *, char *);
 FileInfo *file_search(char *, FileInfo *, int);
 
 // bootpack.c
+int keywin_off(Sheet *, Sheet *, int, int);
+int keywin_on(Sheet *, Sheet *, int);
+void change_wtitle8(Sheet *, char);
