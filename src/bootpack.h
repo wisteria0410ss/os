@@ -210,7 +210,7 @@ void inthandler27(int *esp);
 #define PIT_CNT0		0x0040
 typedef struct Timer{
 	struct Timer *next_timer;
-	unsigned int timeout, flags;
+	unsigned int timeout, flags, flags2;
 	FIFO32 *fifo;
 	int data;
 } Timer;
@@ -225,6 +225,8 @@ Timer *timer_alloc(void);
 void timer_free(Timer *);
 void timer_init(Timer *, FIFO32 *, int);
 void timer_settime(Timer *, unsigned int);
+int timer_cancel(Timer *);
+void timer_cancelall(FIFO32 *fifo);
 void inthandler20(int *);
 
 // mtask.c

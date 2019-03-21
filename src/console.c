@@ -228,6 +228,7 @@ int cmd_app(Console *cons, int *fat, char *cmdline){
 				sht = &(shtctl->sheets0[i]);
 				if((sht->flags & 0x11) == 0x11 && sht->task == task) sheet_free(sht);
 			}
+			timer_cancelall(&task->fifo);
 			memman_free_4k(memman, (int)q, segsiz);
 		}else{
 			cons_putstr(cons, ".hrb file format error.\n");
@@ -354,6 +355,7 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 			break;
 		case 16:
 			reg[7] = (int)timer_alloc();
+			((Timer *)reg[7])->flags2 = 1;
 			break;
 		case 17:
 			timer_init((Timer *)ebx, &task->fifo, eax+256);
