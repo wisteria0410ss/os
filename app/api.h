@@ -13,3 +13,7 @@ extern void api_refreshwin(int win, int x0, int y0, int x1, int y1);
 extern void api_linewin(int win, int x0, int y0, int x1, int y1, int col);
 extern void api_closewin(int win);
 extern int api_getkey(int mode);
+extern int api_alloctimer(void);
+extern void api_inittimer(int timer, int data);
+extern void api_settimer(int timer, int time);
+extern void api_free_timer(int timer);

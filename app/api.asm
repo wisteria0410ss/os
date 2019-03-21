@@ -5,6 +5,7 @@
     global api_refreshwin
     global api_getkey
     global api_end
+    global api_alloctimer, api_inittimer, api_settimer, api_freetimer
 
 section .text
 api_putchar:
@@ -173,3 +174,35 @@ api_getkey:
     mov     eax, [esp+4]
     int     0x40
     ret
+
+api_alloctimer:
+    mov     edx, 16
+    int     0x40
+    ret
+
+api_inittimer:
+    push    ebx
+    mov     edx, 17
+    mov     ebx, [esp+8]
+    mov     eax, [esp+12]
+    int     0x40
+    pop     ebx
+    ret
+
+api_settimer:
+    push    ebx
+    mov     edx, 18
+    mov     ebx, [esp+8]
+    mov     eax, [esp+12]
+    int     0x40
+    pop     ebx
+    ret
+
+api_freetimer:
+    push    ebx
+    mov     edx, 19
+    mov     ebx, [esp+8]
+    int     0x40
+    pop     ebx
+    ret
+

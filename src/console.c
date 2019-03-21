@@ -346,11 +346,24 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 				if(i == 3){
 					cons->cur_c = -1;
 				}
-				if(256 <= i && i < 512){
+				if(i >= 256){
 					reg[7] = i-256;
 					return 0;
 				}
 			}
+			break;
+		case 16:
+			reg[7] = (int)timer_alloc();
+			break;
+		case 17:
+			timer_init((Timer *)ebx, &task->fifo, eax+256);
+			break;
+		case 18:
+			timer_settime((Timer *)ebx, eax);
+			break;
+		case 19:
+			timer_free((Timer *)ebx);
+			break;
 	}
 	return 0;
 }

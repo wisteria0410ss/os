@@ -1,7 +1,7 @@
 .PHONY: img run run-noframe run-vbox clean
 
 OBJS := $(patsubst src/%.c,obj/%.o,$(filter-out src/hankaku.c src/test.c,$(wildcard src/*.c))) obj/hankaku.o obj/func.o
-APPS := $(patsubst app/%.c,bin/%.hrb,$(patsubst app/%.asm,bin/%.hrb,$(filter-out app/api.asm app/har.lds app/api.h app/mt.h,$(wildcard app/*.*))))
+APPS := $(patsubst app/%.c,bin/%.hrb,$(patsubst app/%.asm,bin/%.hrb,$(filter-out app/api.asm app/har.lds app/api.h app/mt.h app/utils.h,$(wildcard app/*.*))))
 FILES := src/strcmp.c src/ipl.asm src/fifo.c $(APPS)
 
 default:
